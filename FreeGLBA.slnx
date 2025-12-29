@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+    <File Path="Remove Modules from FreeFreeGLBA.exe" />
+    <File Path="Rename FreeFreeGLBA.exe" />
+  </Folder>
+  <Project Path="FreeGLBA.DataAccess/FreeGLBA.DataAccess.csproj" Id="1151D3CB-CA9F-4FF7-B187-1FE77E474AD5" />
+  <Project Path="FreeGLBA.DataObjects/FreeGLBA.DataObjects.csproj" Id="2194DF46-FF60-45A3-9122-212157D74F97" />
+  <Project Path="FreeGLBA.EFModels/FreeGLBA.EFModels.csproj" Id="E430AD60-09A5-4D0C-B433-24A3921978CF" />
+  <Project Path="FreeGLBA.Plugins/FreeGLBA.Plugins.csproj" Id="AE71ECEB-CF8E-4567-87B4-632E45271A9C" />
+  <Project Path="FreeGLBA.Client/FreeGLBA.Client.csproj" />
+  <Project Path="FreeGLBA/FreeGLBA.csproj" />
+</Solution>
