@@ -7,7 +7,7 @@
             <div class="modal-header">
                 <h5 class="modal-title">
                     <i class="fa-solid @(IsNew ? "fa-plus" : "fa-pen") me-2"></i>
-                    @(IsNew ? "New" : "Edit") DataSubject
+                    @(IsNew ? "New" : "Edit") Data Subject
                 </h5>
                 <button type="button" class="btn-close" @onclick="Cancel"></button>
             </div>
@@ -15,34 +15,65 @@
                 <EditForm Model="Item" OnValidSubmit="Save">
                     <DataAnnotationsValidator />
                     <div class="mb-3">
-                        <label class="form-label">ExternalId <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" @bind="Item.ExternalId" />
+                        <label class="form-label">External ID <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" @bind="Item.ExternalId" placeholder="Unique identifier (Student ID, Employee ID, Account #, etc.)" />
+                        <div class="form-text">The unique identifier used by source systems to identify this individual.</div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">SubjectType</label>
-                        <input type="text" class="form-control" @bind="Item.SubjectType" />
+                        <label class="form-label">Subject Type</label>
+                        <input type="text" class="form-control" list="subjectTypeList" @bind="Item.SubjectType" placeholder="e.g., Student, Employee, Customer" />
+                        <datalist id="subjectTypeList">
+                            <option value="Student" />
+                            <option value="Employee" />
+                            <option value="Customer" />
+                            <option value="Applicant" />
+                            <option value="Vendor" />
+                            <option value="Patient" />
+                            <option value="Member" />
+                            <option value="Contractor" />
+                        </datalist>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">FirstAccessedAt <span class="text-danger">*</span></label>
-                        <input type="datetime-local" class="form-control" @bind="Item.FirstAccessedAt" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">LastAccessedAt <span class="text-danger">*</span></label>
-                        <input type="datetime-local" class="form-control" @bind="Item.LastAccessedAt" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">TotalAccessCount</label>
-                        <input type="number" class="form-control" @bind="Item.TotalAccessCount" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">UniqueAccessorCount</label>
-                        <input type="number" class="form-control" @bind="Item.UniqueAccessorCount" />
-                    </div>
+
+                    @if (!IsNew)
+                    {
+                        <hr />
+                        <h6 class="text-muted">Access Statistics</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted small">First Accessed</label>
+                                <div class="form-control-plaintext">
+                                    @Item.FirstAccessedAt.ToString("MMM dd, yyyy h:mm tt")
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted small">Last Accessed</label>
+                                <div class="form-control-plaintext">
+                                    @Item.LastAccessedAt.ToString("MMM dd, yyyy h:mm tt")
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted small">Total Access Count</label>
+                                <div class="form-control-plaintext">@Item.TotalAccessCount.ToString("N0")</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted small">Unique Accessors</label>
+                                <div class="form-control-plaintext">@Item.UniqueAccessorCount.ToString("N0")</div>
+                            </div>
+                        </div>
+                        <div class="alert alert-info small">
+                            <i class="fa-solid fa-info-circle me-1"></i>
+                            Statistics are automatically calculated from access events and cannot be edited manually.
+                        </div>
+                    }
                 </EditForm>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
-                <button type="button" class="btn btn-primary" @onclick="Save">Save</button>
+                <button type="button" class="btn btn-primary" @onclick="Save">
+                    <i class="fa-solid fa-save me-1"></i>Save
+                </button>
             </div>
         </div>
     </div>

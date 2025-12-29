@@ -112,6 +112,8 @@
 }
 
 @code {
+    [Parameter] public string? TenantCode { get; set; }
+
     private string _pageName = "accessevents";
     private bool _loading = true;
     private DataObjects.AccessEventFilter _filter = new();
@@ -151,21 +153,14 @@
         await LoadData();
     }
 
-    private void ConfirmDelete(DataObjects.AccessEvent item) {
-        _deleteItem = item;
-        _showDeleteConfirm = true;
-    }
-
-    private void CancelDelete() {
-        _deleteItem = null;
-        _showDeleteConfirm = false;
-    }
+    private void ConfirmDelete(DataObjects.AccessEvent item) { _deleteItem = item; _showDeleteConfirm = true; }
+    private void CancelDelete() { _showDeleteConfirm = false; _deleteItem = null; }
 
     private async Task DeleteConfirmed() {
         if (_deleteItem != null) {
             await Helpers.GetOrPost<bool>(DataObjects.Endpoints.FreeGLBA.DeleteAccessEvent, _deleteItem.AccessEventId);
-            _deleteItem = null;
             _showDeleteConfirm = false;
+            _deleteItem = null;
             await LoadData();
         }
     }

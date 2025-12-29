@@ -1,6 +1,7 @@
-using FreeGLBA.Client.Pages;
+﻿using FreeGLBA.Client.Pages;
 using FreeGLBA.Components;
 using FreeGLBA.Server.Hubs;
+using FreeGLBA.Middleware;
 using Radzen;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -228,6 +229,9 @@ namespace FreeGLBA
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            // API Key authentication for external GLBA event submissions
+            app.UseApiKeyAuth();
 
             app.UseAntiforgery();
 

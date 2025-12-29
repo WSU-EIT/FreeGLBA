@@ -81,7 +81,8 @@ public partial class DataAccess
         if (isNew)
         {
             item = new EFModels.EFModels.SourceSystemItem();
-                item.SourceSystemId = Guid.NewGuid();
+            item.SourceSystemId = Guid.NewGuid();
+            item.EventCount = 0; // Initialize to 0 for new records
             data.SourceSystems.Add(item);
         }
         else
@@ -90,17 +91,38 @@ public partial class DataAccess
             if (item == null) return null;
         }
 
+        // Only update user-editable fields
         item.Name = dto.Name;
         item.DisplayName = dto.DisplayName;
-        item.ApiKey = dto.ApiKey;
         item.ContactEmail = dto.ContactEmail;
         item.IsActive = dto.IsActive;
-        item.LastEventReceivedAt = dto.LastEventReceivedAt;
-        item.EventCount = dto.EventCount;
+
+        // Generate API key if new or if regeneration requested
+        if (isNew || dto.ApiKey == "REGENERATE")
+        {
+            item.ApiKey = GenerateApiKey();
+        }
+        // Don't update LastEventReceivedAt or EventCount - those are managed by the system
 
         await data.SaveChangesAsync();
+        
+        // Return the updated DTO with the generated values
         dto.SourceSystemId = item.SourceSystemId;
+        dto.ApiKey = item.ApiKey;
+        dto.EventCount = item.EventCount;
+        dto.LastEventReceivedAt = item.LastEventReceivedAt;
         return dto;
+    }
+
+    /// <summary>
+    /// Generates a secure random API key for source system authentication.
+    /// </summary>
+    private string GenerateApiKey()
+    {
+        using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+        var bytes = new byte[32];
+        rng.GetBytes(bytes);
+        return Convert.ToBase64String(bytes).Replace("+", "-").Replace("/", "_").TrimEnd('=');
     }
 
     public async Task<bool> DeleteSourceSystemAsync(Guid id)
@@ -135,7 +157,7 @@ public partial class DataAccess
     public async Task<DataObjects.AccessEventFilterResult> GetAccessEventsAsync(DataObjects.AccessEventFilter filter)
     {
         var query = data.AccessEvents
-            .Include(x => x.SourceSystem)
+            .AsNoTracking()
             .AsQueryable();
 
         if (filter.SourceSystemIdFilter != default)
@@ -160,6 +182,12 @@ public partial class DataAccess
 
         var items = await query.Skip(filter.Skip).Take(filter.PageSize).ToListAsync();
 
+        // Get source system names separately to avoid join issues
+        var sourceSystemIds = items.Select(x => x.SourceSystemId).Distinct().ToList();
+        var sourceSystemNames = await data.SourceSystems
+            .Where(x => sourceSystemIds.Contains(x.SourceSystemId))
+            .ToDictionaryAsync(x => x.SourceSystemId, x => x.Name);
+
         return new DataObjects.AccessEventFilterResult
         {
             Records = items.Select(x => new DataObjects.AccessEvent
@@ -180,7 +208,7 @@ public partial class DataAccess
                 Purpose = x.Purpose,
                 IpAddress = x.IpAddress,
                 AdditionalData = x.AdditionalData,
-                SourceSystemName = x.SourceSystem?.Name ?? string.Empty,
+                SourceSystemName = sourceSystemNames.GetValueOrDefault(x.SourceSystemId, string.Empty),
             }).ToList(),
             TotalRecords = total,
             Page = filter.Page,
@@ -191,9 +219,17 @@ public partial class DataAccess
     public async Task<DataObjects.AccessEvent?> GetAccessEventAsync(Guid id)
     {
         var item = await data.AccessEvents
-            .Include(x => x.SourceSystem)
+            .AsNoTracking()
             .FirstOrDefaultAsync(x => x.AccessEventId == id);
         if (item == null) return null;
+
+        // Get source system name separately
+        string sourceSystemName = string.Empty;
+        if (item.SourceSystemId != default)
+        {
+            var sourceSystem = await data.SourceSystems.FirstOrDefaultAsync(x => x.SourceSystemId == item.SourceSystemId);
+            sourceSystemName = sourceSystem?.Name ?? string.Empty;
+        }
 
         return new DataObjects.AccessEvent
         {
@@ -213,7 +249,7 @@ public partial class DataAccess
             Purpose = item.Purpose,
             IpAddress = item.IpAddress,
             AdditionalData = item.AdditionalData,
-            SourceSystemName = item.SourceSystem?.Name ?? string.Empty,
+            SourceSystemName = sourceSystemName,
         };
     }
 
@@ -225,33 +261,37 @@ public partial class DataAccess
         if (isNew)
         {
             item = new EFModels.EFModels.AccessEventItem();
-                item.AccessEventId = Guid.NewGuid();
+            item.AccessEventId = Guid.NewGuid();
+            item.ReceivedAt = DateTime.UtcNow; // Auto-set ReceivedAt for new records
             data.AccessEvents.Add(item);
         }
         else
         {
             item = await data.AccessEvents.FindAsync(dto.AccessEventId);
             if (item == null) return null;
+            // Don't update ReceivedAt for existing records
         }
 
         item.SourceSystemId = dto.SourceSystemId;
-        item.SourceEventId = dto.SourceEventId;
+        item.SourceEventId = dto.SourceEventId ?? string.Empty;
         item.AccessedAt = dto.AccessedAt;
-        item.ReceivedAt = dto.ReceivedAt;
-        item.UserId = dto.UserId;
-        item.UserName = dto.UserName;
-        item.UserEmail = dto.UserEmail;
-        item.UserDepartment = dto.UserDepartment;
-        item.SubjectId = dto.SubjectId;
-        item.SubjectType = dto.SubjectType;
-        item.DataCategory = dto.DataCategory;
-        item.AccessType = dto.AccessType;
-        item.Purpose = dto.Purpose;
-        item.IpAddress = dto.IpAddress;
-        item.AdditionalData = dto.AdditionalData;
+        item.UserId = dto.UserId ?? string.Empty;
+        item.UserName = dto.UserName ?? string.Empty;
+        item.UserEmail = dto.UserEmail ?? string.Empty;
+        item.UserDepartment = dto.UserDepartment ?? string.Empty;
+        item.SubjectId = dto.SubjectId ?? string.Empty;
+        item.SubjectType = dto.SubjectType ?? string.Empty;
+        item.DataCategory = dto.DataCategory ?? string.Empty;
+        item.AccessType = dto.AccessType ?? string.Empty;
+        item.Purpose = dto.Purpose ?? string.Empty;
+        item.IpAddress = dto.IpAddress ?? string.Empty;
+        item.AdditionalData = dto.AdditionalData ?? string.Empty;
 
         await data.SaveChangesAsync();
+        
+        // Return updated DTO
         dto.AccessEventId = item.AccessEventId;
+        dto.ReceivedAt = item.ReceivedAt;
         return dto;
     }
 
@@ -352,7 +392,11 @@ public partial class DataAccess
         if (isNew)
         {
             item = new EFModels.EFModels.DataSubjectItem();
-                item.DataSubjectId = Guid.NewGuid();
+            item.DataSubjectId = Guid.NewGuid();
+            item.FirstAccessedAt = DateTime.UtcNow;
+            item.LastAccessedAt = DateTime.UtcNow;
+            item.TotalAccessCount = 0;
+            item.UniqueAccessorCount = 0;
             data.DataSubjects.Add(item);
         }
         else
@@ -361,15 +405,19 @@ public partial class DataAccess
             if (item == null) return null;
         }
 
-        item.ExternalId = dto.ExternalId;
-        item.SubjectType = dto.SubjectType;
-        item.FirstAccessedAt = dto.FirstAccessedAt;
-        item.LastAccessedAt = dto.LastAccessedAt;
-        item.TotalAccessCount = dto.TotalAccessCount;
-        item.UniqueAccessorCount = dto.UniqueAccessorCount;
+        // Only update user-editable fields
+        item.ExternalId = dto.ExternalId ?? string.Empty;
+        item.SubjectType = dto.SubjectType ?? string.Empty;
+        // Don't update statistics - those are managed by the system
 
         await data.SaveChangesAsync();
+        
+        // Return updated DTO with all values
         dto.DataSubjectId = item.DataSubjectId;
+        dto.FirstAccessedAt = item.FirstAccessedAt;
+        dto.LastAccessedAt = item.LastAccessedAt;
+        dto.TotalAccessCount = item.TotalAccessCount;
+        dto.UniqueAccessorCount = item.UniqueAccessorCount;
         return dto;
     }
 
@@ -478,7 +526,16 @@ public partial class DataAccess
         if (isNew)
         {
             item = new EFModels.EFModels.ComplianceReportItem();
-                item.ComplianceReportId = Guid.NewGuid();
+            item.ComplianceReportId = Guid.NewGuid();
+            item.GeneratedAt = DateTime.UtcNow;
+            item.GeneratedBy = "System"; // TODO: Get from CurrentUser when available
+            
+            // Calculate statistics for the report period
+            var stats = await CalculateReportStatisticsAsync(dto.PeriodStart, dto.PeriodEnd);
+            item.TotalEvents = stats.TotalEvents;
+            item.UniqueUsers = stats.UniqueUsers;
+            item.UniqueSubjects = stats.UniqueSubjects;
+            
             data.ComplianceReports.Add(item);
         }
         else
@@ -487,20 +544,41 @@ public partial class DataAccess
             if (item == null) return null;
         }
 
-        item.ReportType = dto.ReportType;
-        item.GeneratedAt = dto.GeneratedAt;
-        item.GeneratedBy = dto.GeneratedBy;
+        // User-editable fields
+        item.ReportType = dto.ReportType ?? string.Empty;
         item.PeriodStart = dto.PeriodStart;
         item.PeriodEnd = dto.PeriodEnd;
-        item.TotalEvents = dto.TotalEvents;
-        item.UniqueUsers = dto.UniqueUsers;
-        item.UniqueSubjects = dto.UniqueSubjects;
-        item.ReportData = dto.ReportData;
-        item.FileUrl = dto.FileUrl;
+        item.ReportData = dto.ReportData ?? string.Empty;
+        item.FileUrl = dto.FileUrl ?? string.Empty;
+        // Don't update GeneratedAt, GeneratedBy, or statistics for existing records
 
         await data.SaveChangesAsync();
+        
+        // Return updated DTO
         dto.ComplianceReportId = item.ComplianceReportId;
+        dto.GeneratedAt = item.GeneratedAt;
+        dto.GeneratedBy = item.GeneratedBy;
+        dto.TotalEvents = item.TotalEvents;
+        dto.UniqueUsers = item.UniqueUsers;
+        dto.UniqueSubjects = item.UniqueSubjects;
         return dto;
+    }
+
+    /// <summary>
+    /// Calculate report statistics for a given period.
+    /// </summary>
+    private async Task<(int TotalEvents, int UniqueUsers, int UniqueSubjects)> CalculateReportStatisticsAsync(
+        DateTime periodStart, DateTime periodEnd)
+    {
+        var events = await data.AccessEvents
+            .Where(x => x.AccessedAt >= periodStart && x.AccessedAt <= periodEnd)
+            .ToListAsync();
+
+        return (
+            TotalEvents: events.Count,
+            UniqueUsers: events.Select(x => x.UserId).Distinct().Count(),
+            UniqueSubjects: events.Select(x => x.SubjectId).Distinct().Count()
+        );
     }
 
     public async Task<bool> DeleteComplianceReportAsync(Guid id)

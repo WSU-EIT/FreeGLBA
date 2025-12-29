@@ -112,6 +112,8 @@
 }
 
 @code {
+    [Parameter] public string? TenantCode { get; set; }
+    
     private string _pageName = "compliancereports";
     private bool _loading = true;
     private DataObjects.ComplianceReportFilter _filter = new();

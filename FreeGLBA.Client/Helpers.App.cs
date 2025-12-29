@@ -1,4 +1,4 @@
-using System.Net.NetworkInformation;
+﻿using System.Net.NetworkInformation;
 
 namespace FreeGLBA.Client;
 
@@ -98,17 +98,8 @@ public static partial class Helpers
             // Add any app-specific top-level menu items here.
             var output = new List<DataObjects.MenuItem>();
 
-            // Sample
-            //if (Model.User.Admin) {
-            //    output.Add(new DataObjects.MenuItem {
-            //        Title = "My Custom Menu Item",
-            //        Icon = "Home",
-            //        PageNames = new List<string> { "myitems", "editmyitem" },
-            //        SortOrder = 1000,
-            //        url = Helpers.BuildUrl("MyItems"),
-            //        AppAdminOnly = false,
-            //    });
-            //}
+            // GLBA Dashboard - visible to all logged in users
+            output.AddRange(Helpers.FreeGLBAMenuItemsApp.ToList());
 
             return output;
         }

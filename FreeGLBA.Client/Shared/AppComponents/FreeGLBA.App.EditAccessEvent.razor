@@ -3,87 +3,150 @@
 @inject HttpClient Http
 
 <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
                     <i class="fa-solid @(IsNew ? "fa-plus" : "fa-pen") me-2"></i>
-                    @(IsNew ? "New" : "Edit") AccessEvent
+                    @(IsNew ? "New" : "Edit") Access Event
                 </h5>
                 <button type="button" class="btn-close" @onclick="Cancel"></button>
             </div>
             <div class="modal-body">
                 <EditForm Model="Item" OnValidSubmit="Save">
                     <DataAnnotationsValidator />
-                    <div class="mb-3">
-                        <label class="form-label">SourceSystem <span class="text-danger">*</span></label>
-                        <select class="form-select" @bind="Item.SourceSystemId">
-                            @foreach (var parent in _sourcesystemList) {
-                                <option value="@parent.SourceSystemId">@parent.Name</option>
-                            }
-                        </select>
+                    
+                    <h6 class="text-muted mb-3">Source Information</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Source System</label>
+                            <select class="form-select" @bind="Item.SourceSystemId">
+                                <option value="@Guid.Empty">-- None / Manual Entry --</option>
+                                @foreach (var parent in _sourcesystemList) {
+                                    <option value="@parent.SourceSystemId">@parent.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Source Event ID</label>
+                            <input type="text" class="form-control" @bind="Item.SourceEventId" placeholder="External system's event ID (for deduplication)" />
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">SourceEventId</label>
-                        <input type="text" class="form-control" @bind="Item.SourceEventId" />
+
+                    <h6 class="text-muted mb-3">Access Details</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Accessed At <span class="text-danger">*</span></label>
+                            <input type="datetime-local" class="form-control" @bind="Item.AccessedAt" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Access Type <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" list="accessTypeList" @bind="Item.AccessType" placeholder="e.g., View, Export, Print" />
+                            <datalist id="accessTypeList">
+                                <option value="View" />
+                                <option value="Export" />
+                                <option value="Print" />
+                                <option value="Modify" />
+                                <option value="Delete" />
+                                <option value="Query" />
+                                <option value="Download" />
+                                <option value="API Access" />
+                            </datalist>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">AccessedAt <span class="text-danger">*</span></label>
-                        <input type="datetime-local" class="form-control" @bind="Item.AccessedAt" />
+
+                    <h6 class="text-muted mb-3">Accessor Information (Who Accessed)</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">User ID <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" @bind="Item.UserId" placeholder="Employee/User ID" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">User Name</label>
+                            <input type="text" class="form-control" @bind="Item.UserName" />
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">ReceivedAt <span class="text-danger">*</span></label>
-                        <input type="datetime-local" class="form-control" @bind="Item.ReceivedAt" />
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">User Email</label>
+                            <input type="email" class="form-control" @bind="Item.UserEmail" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">User Department</label>
+                            <input type="text" class="form-control" @bind="Item.UserDepartment" />
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">UserId <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" @bind="Item.UserId" />
+
+                    <h6 class="text-muted mb-3">Subject Information (Whose Data Was Accessed)</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Subject ID <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" @bind="Item.SubjectId" placeholder="ID of person whose data was accessed" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Subject Type</label>
+                            <input type="text" class="form-control" list="subjectTypeList" @bind="Item.SubjectType" placeholder="e.g., Student, Employee" />
+                            <datalist id="subjectTypeList">
+                                <option value="Student" />
+                                <option value="Employee" />
+                                <option value="Customer" />
+                                <option value="Applicant" />
+                                <option value="Vendor" />
+                                <option value="Patient" />
+                                <option value="Member" />
+                            </datalist>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">UserName</label>
-                        <input type="text" class="form-control" @bind="Item.UserName" />
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Data Category</label>
+                            <input type="text" class="form-control" list="dataCategoryList" @bind="Item.DataCategory" placeholder="e.g., Financial, Personal Info" />
+                            <datalist id="dataCategoryList">
+                                <option value="Financial Aid" />
+                                <option value="Financial Records" />
+                                <option value="Personal Info" />
+                                <option value="Tax Info" />
+                                <option value="SSN" />
+                                <option value="Health Records" />
+                                <option value="Academic Records" />
+                                <option value="Employment Records" />
+                                <option value="Contact Info" />
+                                <option value="Payment Info" />
+                            </datalist>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">IP Address</label>
+                            <input type="text" class="form-control" @bind="Item.IpAddress" placeholder="e.g., 192.168.1.1" />
+                        </div>
                     </div>
+
                     <div class="mb-3">
-                        <label class="form-label">UserEmail</label>
-                        <input type="text" class="form-control" @bind="Item.UserEmail" />
+                        <label class="form-label">Purpose / Business Justification</label>
+                        <textarea class="form-control" rows="2" @bind="Item.Purpose" placeholder="Reason for accessing this data"></textarea>
                     </div>
+
                     <div class="mb-3">
-                        <label class="form-label">UserDepartment</label>
-                        <input type="text" class="form-control" @bind="Item.UserDepartment" />
+                        <label class="form-label">Additional Data (JSON)</label>
+                        <textarea class="form-control font-monospace" rows="2" @bind="Item.AdditionalData" placeholder='{"customField": "value"}'></textarea>
+                        <div class="form-text">Use this field for any system-specific data not covered above.</div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">SubjectId <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" @bind="Item.SubjectId" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">SubjectType</label>
-                        <input type="text" class="form-control" @bind="Item.SubjectType" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">DataCategory</label>
-                        <input type="text" class="form-control" @bind="Item.DataCategory" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">AccessType <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" @bind="Item.AccessType" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Purpose</label>
-                        <textarea class="form-control" rows="3" @bind="Item.Purpose"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">IpAddress</label>
-                        <input type="text" class="form-control" @bind="Item.IpAddress" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">AdditionalData</label>
-                        <input type="text" class="form-control" @bind="Item.AdditionalData" />
-                    </div>
+
+                    @if (!IsNew)
+                    {
+                        <hr />
+                        <div class="row text-muted small">
+                            <div class="col-md-6">
+                                <strong>Received At:</strong> @Item.ReceivedAt.ToString("MMM dd, yyyy h:mm tt")
+                            </div>
+                        </div>
+                    }
                 </EditForm>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
-                <button type="button" class="btn btn-primary" @onclick="Save">Save</button>
+                <button type="button" class="btn btn-primary" @onclick="Save">
+                    <i class="fa-solid fa-save me-1"></i>Save
+                </button>
             </div>
         </div>
     </div>
@@ -101,6 +164,15 @@
         var sourcesystemResult = await Helpers.GetOrPost<DataObjects.SourceSystemFilterResult>(
             DataObjects.Endpoints.FreeGLBA.GetSourceSystems, new DataObjects.SourceSystemFilter { PageSize = 1000 }) ?? new();
         _sourcesystemList = sourcesystemResult.Records;
+    }
+
+    protected override void OnParametersSet()
+    {
+        // Set defaults for new records
+        if (IsNew)
+        {
+            Item.AccessedAt = DateTime.Now;
+        }
     }
 
     private async Task Save() => await OnSave.InvokeAsync(Item);

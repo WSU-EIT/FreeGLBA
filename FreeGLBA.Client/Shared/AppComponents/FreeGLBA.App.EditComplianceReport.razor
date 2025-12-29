@@ -7,58 +7,108 @@
             <div class="modal-header">
                 <h5 class="modal-title">
                     <i class="fa-solid @(IsNew ? "fa-plus" : "fa-pen") me-2"></i>
-                    @(IsNew ? "New" : "Edit") ComplianceReport
+                    @(IsNew ? "New" : "Edit") Compliance Report
                 </h5>
                 <button type="button" class="btn-close" @onclick="Cancel"></button>
             </div>
             <div class="modal-body">
                 <EditForm Model="Item" OnValidSubmit="Save">
                     <DataAnnotationsValidator />
+                    
                     <div class="mb-3">
-                        <label class="form-label">ReportType <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" @bind="Item.ReportType" />
+                        <label class="form-label">Report Type <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" list="reportTypeList" @bind="Item.ReportType" placeholder="e.g., Annual, Quarterly, Audit" />
+                        <datalist id="reportTypeList">
+                            <option value="Annual" />
+                            <option value="Quarterly" />
+                            <option value="Monthly" />
+                            <option value="Weekly" />
+                            <option value="Audit" />
+                            <option value="Investigation" />
+                            <option value="Subject Request" />
+                            <option value="Compliance Review" />
+                            <option value="Custom" />
+                        </datalist>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">GeneratedAt <span class="text-danger">*</span></label>
-                        <input type="datetime-local" class="form-control" @bind="Item.GeneratedAt" />
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Period Start <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" @bind="Item.PeriodStart" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Period End <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" @bind="Item.PeriodEnd" />
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">GeneratedBy</label>
-                        <input type="text" class="form-control" @bind="Item.GeneratedBy" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">PeriodStart <span class="text-danger">*</span></label>
-                        <input type="datetime-local" class="form-control" @bind="Item.PeriodStart" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">PeriodEnd <span class="text-danger">*</span></label>
-                        <input type="datetime-local" class="form-control" @bind="Item.PeriodEnd" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">TotalEvents</label>
-                        <input type="number" class="form-control" @bind="Item.TotalEvents" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">UniqueUsers</label>
-                        <input type="number" class="form-control" @bind="Item.UniqueUsers" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">UniqueSubjects</label>
-                        <input type="number" class="form-control" @bind="Item.UniqueSubjects" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">ReportData</label>
-                        <input type="text" class="form-control" @bind="Item.ReportData" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">FileUrl</label>
-                        <textarea class="form-control" rows="3" @bind="Item.FileUrl"></textarea>
-                    </div>
+
+                    @if (!IsNew)
+                    {
+                        <hr />
+                        <h6 class="text-muted">Report Statistics</h6>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label text-muted small">Total Events</label>
+                                <div class="form-control-plaintext fw-bold">@Item.TotalEvents.ToString("N0")</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label text-muted small">Unique Accessors</label>
+                                <div class="form-control-plaintext fw-bold">@Item.UniqueUsers.ToString("N0")</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label text-muted small">Unique Subjects</label>
+                                <div class="form-control-plaintext fw-bold">@Item.UniqueSubjects.ToString("N0")</div>
+                            </div>
+                        </div>
+
+                        <hr />
+                        <h6 class="text-muted">Report Metadata</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted small">Generated At</label>
+                                <div class="form-control-plaintext">@Item.GeneratedAt.ToString("MMM dd, yyyy h:mm tt")</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted small">Generated By</label>
+                                <div class="form-control-plaintext">@(string.IsNullOrEmpty(Item.GeneratedBy) ? "-" : Item.GeneratedBy)</div>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(Item.FileUrl))
+                        {
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Report File</label>
+                                <div>
+                                    <a href="@Item.FileUrl" target="_blank" class="btn btn-outline-primary btn-sm">
+                                        <i class="fa-solid fa-download me-1"></i>Download Report
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="fa-solid fa-info-circle me-1"></i>
+                            Report statistics will be calculated automatically based on access events within the selected period.
+                        </div>
+                    }
                 </EditForm>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
-                <button type="button" class="btn btn-primary" @onclick="Save">Save</button>
+                @if (IsNew)
+                {
+                    <button type="button" class="btn btn-primary" @onclick="Save">
+                        <i class="fa-solid fa-file-export me-1"></i>Generate Report
+                    </button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-primary" @onclick="Save">
+                        <i class="fa-solid fa-save me-1"></i>Save
+                    </button>
+                }
             </div>
         </div>
     </div>
@@ -70,6 +120,17 @@
     [Parameter] public EventCallback OnCancel { get; set; }
 
     private bool IsNew => Item.ComplianceReportId == default;
+
+    protected override void OnParametersSet()
+    {
+        if (IsNew)
+        {
+            // Set default period to current month
+            var now = DateTime.Now;
+            Item.PeriodStart = new DateTime(now.Year, now.Month, 1);
+            Item.PeriodEnd = Item.PeriodStart.AddMonths(1).AddDays(-1);
+        }
+    }
 
     private async Task Save() => await OnSave.InvokeAsync(Item);
     private async Task Cancel() => await OnCancel.InvokeAsync();

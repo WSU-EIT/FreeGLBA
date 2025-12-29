@@ -7,7 +7,7 @@
             <div class="modal-header">
                 <h5 class="modal-title">
                     <i class="fa-solid @(IsNew ? "fa-plus" : "fa-pen") me-2"></i>
-                    @(IsNew ? "New" : "Edit") SourceSystem
+                    @(IsNew ? "New" : "Edit") Source System
                 </h5>
                 <button type="button" class="btn-close" @onclick="Cancel"></button>
             </div>
@@ -16,39 +16,69 @@
                     <DataAnnotationsValidator />
                     <div class="mb-3">
                         <label class="form-label">Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" @bind="Item.Name" />
+                        <input type="text" class="form-control" @bind="Item.Name" placeholder="e.g., Banner, PeopleSoft, etc." />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">DisplayName</label>
-                        <input type="text" class="form-control" @bind="Item.DisplayName" />
+                        <label class="form-label">Display Name</label>
+                        <input type="text" class="form-control" @bind="Item.DisplayName" placeholder="Friendly name for display" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">ApiKey <span class="text-danger">*</span></label>
-                        <textarea class="form-control" rows="3" @bind="Item.ApiKey"></textarea>
+                        <label class="form-label">Contact Email</label>
+                        <input type="email" class="form-control" @bind="Item.ContactEmail" placeholder="admin@example.com" />
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">ContactEmail</label>
-                        <input type="text" class="form-control" @bind="Item.ContactEmail" />
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="isActive" @bind="Item.IsActive" />
+                        <label class="form-check-label" for="isActive">Active</label>
+                        <div class="form-text">Inactive source systems cannot send events via API.</div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">IsActive</label>
-                        <div class="form-check">
-                            <input type="checkbox" class="form-check-input" @bind="Item.IsActive" />
+
+                    @if (!IsNew)
+                    {
+                        <hr />
+                        <h6 class="text-muted">API Key</h6>
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <input type="@(_showApiKey ? "text" : "password")" class="form-control font-monospace" 
+                                       value="@Item.ApiKey" readonly />
+                                <button type="button" class="btn btn-outline-secondary" @onclick="ToggleApiKeyVisibility">
+                                    <i class="fa-solid @(_showApiKey ? "fa-eye-slash" : "fa-eye")"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" @onclick="CopyApiKey" title="Copy to clipboard">
+                                    <i class="fa-solid fa-copy"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">Use this API key in the Authorization header when sending events.</div>
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">LastEventReceivedAt</label>
-                        <input type="text" class="form-control" @bind="Item.LastEventReceivedAt" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">EventCount</label>
-                        <input type="number" class="form-control" @bind="Item.EventCount" />
-                    </div>
+                        
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-warning btn-sm" @onclick="RegenerateApiKey">
+                                <i class="fa-solid fa-rotate me-1"></i>Regenerate API Key
+                            </button>
+                            <div class="form-text text-warning">Warning: Regenerating will invalidate the current key.</div>
+                        </div>
+
+                        <hr />
+                        <h6 class="text-muted">Statistics</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">Last Event Received</label>
+                                <div class="form-control-plaintext">
+                                    @(Item.LastEventReceivedAt.HasValue ? Item.LastEventReceivedAt.Value.ToString("MMM dd, yyyy h:mm tt") : "Never")
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">Total Events</label>
+                                <div class="form-control-plaintext">@Item.EventCount.ToString("N0")</div>
+                            </div>
+                        </div>
+                    }
                 </EditForm>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
-                <button type="button" class="btn btn-primary" @onclick="Save">Save</button>
+                <button type="button" class="btn btn-primary" @onclick="Save">
+                    <i class="fa-solid fa-save me-1"></i>Save
+                </button>
             </div>
         </div>
     </div>
@@ -60,7 +90,41 @@
     [Parameter] public EventCallback OnCancel { get; set; }
 
     private bool IsNew => Item.SourceSystemId == default;
+    private bool _showApiKey = false;
+    private bool _regenerateKey = false;
 
-    private async Task Save() => await OnSave.InvokeAsync(Item);
+    protected override void OnParametersSet()
+    {
+        // For new items, set IsActive to true by default
+        if (IsNew)
+        {
+            Item.IsActive = true;
+        }
+    }
+
+    private void ToggleApiKeyVisibility() => _showApiKey = !_showApiKey;
+
+    private async Task CopyApiKey()
+    {
+        // This would need JS interop to copy to clipboard
+        // For now, just toggle visibility so user can copy manually
+        _showApiKey = true;
+    }
+
+    private void RegenerateApiKey()
+    {
+        _regenerateKey = true;
+    }
+
+    private async Task Save()
+    {
+        // Signal if we need to regenerate the API key
+        if (IsNew || _regenerateKey)
+        {
+            Item.ApiKey = "REGENERATE"; // Special marker for the backend
+        }
+        await OnSave.InvokeAsync(Item);
+    }
+
     private async Task Cancel() => await OnCancel.InvokeAsync();
 }
