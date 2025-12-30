@@ -28,8 +28,6 @@ public partial class SourceSystemItem
 
     public DateTime? LastEventReceivedAt { get; set; }
 
-    public long EventCount { get; set; } = 0;
-
     // Navigation properties
     public virtual ICollection<AccessEventItem> AccessEvents { get; set; } = new List<AccessEventItem>();
 }

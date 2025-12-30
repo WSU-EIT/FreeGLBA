@@ -16,9 +16,14 @@ public partial class DataAccess
         var query = data.SourceSystems
             .AsQueryable();
 
+        if (filter.IsActiveFilter.HasValue)
+        {
+            query = query.Where(x => x.IsActive == filter.IsActiveFilter.Value);
+        }
+
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
-            query = query.Where(x => x.Name.Contains(filter.Search) || x.DisplayName.Contains(filter.Search) || x.ApiKey.Contains(filter.Search));
+            query = query.Where(x => x.Name.Contains(filter.Search) || x.DisplayName.Contains(filter.Search) || x.ContactEmail.Contains(filter.Search));
         }
 
         var total = await query.CountAsync();
@@ -27,13 +32,21 @@ public partial class DataAccess
         {
             "Name" => filter.SortDescending ? query.OrderByDescending(x => x.Name) : query.OrderBy(x => x.Name),
             "DisplayName" => filter.SortDescending ? query.OrderByDescending(x => x.DisplayName) : query.OrderBy(x => x.DisplayName),
-            "ApiKey" => filter.SortDescending ? query.OrderByDescending(x => x.ApiKey) : query.OrderBy(x => x.ApiKey),
             "ContactEmail" => filter.SortDescending ? query.OrderByDescending(x => x.ContactEmail) : query.OrderBy(x => x.ContactEmail),
             "IsActive" => filter.SortDescending ? query.OrderByDescending(x => x.IsActive) : query.OrderBy(x => x.IsActive),
+            "LastEventReceivedAt" => filter.SortDescending ? query.OrderByDescending(x => x.LastEventReceivedAt) : query.OrderBy(x => x.LastEventReceivedAt),
             _ => query.OrderByDescending(x => x.SourceSystemId)
         };
 
         var items = await query.Skip(filter.Skip).Take(filter.PageSize).ToListAsync();
+
+        // Get event counts via query (computed, not stored)
+        var sourceSystemIds = items.Select(x => x.SourceSystemId).ToList();
+        var eventCounts = await data.AccessEvents
+            .Where(x => sourceSystemIds.Contains(x.SourceSystemId))
+            .GroupBy(x => x.SourceSystemId)
+            .Select(g => new { SourceSystemId = g.Key, Count = g.LongCount() })
+            .ToDictionaryAsync(x => x.SourceSystemId, x => x.Count);
 
         return new DataObjects.SourceSystemFilterResult
         {
@@ -46,7 +59,7 @@ public partial class DataAccess
                 ContactEmail = x.ContactEmail,
                 IsActive = x.IsActive,
                 LastEventReceivedAt = x.LastEventReceivedAt,
-                EventCount = x.EventCount,
+                EventCount = eventCounts.GetValueOrDefault(x.SourceSystemId, 0),
             }).ToList(),
             TotalRecords = total,
             Page = filter.Page,
@@ -60,6 +73,9 @@ public partial class DataAccess
             .FirstOrDefaultAsync(x => x.SourceSystemId == id);
         if (item == null) return null;
 
+        // Get event count via query
+        var eventCount = await data.AccessEvents.CountAsync(x => x.SourceSystemId == id);
+
         return new DataObjects.SourceSystem
         {
             SourceSystemId = item.SourceSystemId,
@@ -69,7 +85,7 @@ public partial class DataAccess
             ContactEmail = item.ContactEmail,
             IsActive = item.IsActive,
             LastEventReceivedAt = item.LastEventReceivedAt,
-            EventCount = item.EventCount,
+            EventCount = eventCount,
         };
     }
 
@@ -82,7 +98,6 @@ public partial class DataAccess
         {
             item = new EFModels.EFModels.SourceSystemItem();
             item.SourceSystemId = Guid.NewGuid();
-            item.EventCount = 0; // Initialize to 0 for new records
             data.SourceSystems.Add(item);
         }
         else
@@ -102,14 +117,16 @@ public partial class DataAccess
         {
             item.ApiKey = GenerateApiKey();
         }
-        // Don't update LastEventReceivedAt or EventCount - those are managed by the system
 
         await data.SaveChangesAsync();
+        
+        // Get event count via query for return value
+        var eventCount = await data.AccessEvents.CountAsync(x => x.SourceSystemId == item.SourceSystemId);
         
         // Return the updated DTO with the generated values
         dto.SourceSystemId = item.SourceSystemId;
         dto.ApiKey = item.ApiKey;
-        dto.EventCount = item.EventCount;
+        dto.EventCount = eventCount;
         dto.LastEventReceivedAt = item.LastEventReceivedAt;
         return dto;
     }
@@ -165,19 +182,25 @@ public partial class DataAccess
 
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
-            query = query.Where(x => x.SourceEventId.Contains(filter.Search) || x.UserId.Contains(filter.Search) || x.UserName.Contains(filter.Search));
+            query = query.Where(x => x.SourceEventId.Contains(filter.Search) || 
+                                     x.UserId.Contains(filter.Search) || 
+                                     x.UserName.Contains(filter.Search) ||
+                                     x.SubjectId.Contains(filter.Search) ||
+                                     x.Purpose.Contains(filter.Search));
         }
 
         var total = await query.CountAsync();
 
         query = filter.SortColumn switch
         {
-            "SourceSystemId" => filter.SortDescending ? query.OrderByDescending(x => x.SourceSystemId) : query.OrderBy(x => x.SourceSystemId),
+            "SourceSystemName" => filter.SortDescending ? query.OrderByDescending(x => x.SourceSystem.Name) : query.OrderBy(x => x.SourceSystem.Name),
             "SourceEventId" => filter.SortDescending ? query.OrderByDescending(x => x.SourceEventId) : query.OrderBy(x => x.SourceEventId),
             "AccessedAt" => filter.SortDescending ? query.OrderByDescending(x => x.AccessedAt) : query.OrderBy(x => x.AccessedAt),
             "ReceivedAt" => filter.SortDescending ? query.OrderByDescending(x => x.ReceivedAt) : query.OrderBy(x => x.ReceivedAt),
             "UserId" => filter.SortDescending ? query.OrderByDescending(x => x.UserId) : query.OrderBy(x => x.UserId),
-            _ => query.OrderByDescending(x => x.AccessEventId)
+            "SubjectId" => filter.SortDescending ? query.OrderByDescending(x => x.SubjectId) : query.OrderBy(x => x.SubjectId),
+            "AccessType" => filter.SortDescending ? query.OrderByDescending(x => x.AccessType) : query.OrderBy(x => x.AccessType),
+            _ => query.OrderByDescending(x => x.AccessedAt)
         };
 
         var items = await query.Skip(filter.Skip).Take(filter.PageSize).ToListAsync();
@@ -262,14 +285,13 @@ public partial class DataAccess
         {
             item = new EFModels.EFModels.AccessEventItem();
             item.AccessEventId = Guid.NewGuid();
-            item.ReceivedAt = DateTime.UtcNow; // Auto-set ReceivedAt for new records
+            item.ReceivedAt = DateTime.UtcNow;
             data.AccessEvents.Add(item);
         }
         else
         {
             item = await data.AccessEvents.FindAsync(dto.AccessEventId);
             if (item == null) return null;
-            // Don't update ReceivedAt for existing records
         }
 
         item.SourceSystemId = dto.SourceSystemId;
@@ -288,6 +310,23 @@ public partial class DataAccess
         item.AdditionalData = dto.AdditionalData ?? string.Empty;
 
         await data.SaveChangesAsync();
+
+        // Update LastEventReceivedAt on source system (works with all providers including InMemory)
+        if (isNew && dto.SourceSystemId != Guid.Empty)
+        {
+            var sourceSystem = await data.SourceSystems.FindAsync(dto.SourceSystemId);
+            if (sourceSystem != null)
+            {
+                sourceSystem.LastEventReceivedAt = DateTime.UtcNow;
+                await data.SaveChangesAsync();
+            }
+        }
+
+        // Update DataSubject stats if SubjectId is provided
+        if (!string.IsNullOrEmpty(dto.SubjectId))
+        {
+            await UpdateDataSubjectStatsAsync(dto.SubjectId);
+        }
         
         // Return updated DTO
         dto.AccessEventId = item.AccessEventId;
@@ -299,8 +338,18 @@ public partial class DataAccess
     {
         var item = await data.AccessEvents.FindAsync(id);
         if (item == null) return false;
+        
+        var subjectId = item.SubjectId;
+        
         data.AccessEvents.Remove(item);
         await data.SaveChangesAsync();
+        
+        // Update DataSubject stats
+        if (!string.IsNullOrEmpty(subjectId))
+        {
+            await UpdateDataSubjectStatsAsync(subjectId);
+        }
+        
         return true;
     }
 

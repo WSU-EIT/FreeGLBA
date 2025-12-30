@@ -80,18 +80,18 @@ public partial class DataAccess
         };
 
         data.AccessEvents.Add(evt);
+        await data.SaveChangesAsync();
 
-        // Update source system stats
-        await data.SourceSystems
-            .Where(x => x.SourceSystemId == sourceSystemId)
-            .ExecuteUpdateAsync(s => s
-                .SetProperty(x => x.EventCount, x => x.EventCount + 1)
-                .SetProperty(x => x.LastEventReceivedAt, DateTime.UtcNow));
+        // Update LastEventReceivedAt on source system (works with all providers including InMemory)
+        var sourceSystem = await data.SourceSystems.FindAsync(sourceSystemId);
+        if (sourceSystem != null)
+        {
+            sourceSystem.LastEventReceivedAt = DateTime.UtcNow;
+            await data.SaveChangesAsync();
+        }
 
         // Update DataSubject stats
         await UpdateDataSubjectStatsAsync(request.SubjectId);
-
-        await data.SaveChangesAsync();
 
         response.EventId = evt.AccessEventId;
         response.Status = "accepted";

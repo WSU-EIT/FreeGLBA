@@ -45,6 +45,7 @@ public partial class DataAccess
             return null;
 
         // Return as DataObject with inline mapping
+        // Note: EventCount not needed for API key validation - caller just needs source system identity
         return new DataObjects.SourceSystem
         {
             SourceSystemId = record.SourceSystemId,
@@ -54,7 +55,7 @@ public partial class DataAccess
             ContactEmail = record.ContactEmail,
             IsActive = record.IsActive,
             LastEventReceivedAt = record.LastEventReceivedAt,
-            EventCount = record.EventCount,
+            // EventCount intentionally omitted - not needed for auth, compute separately if needed
         };
     }
 
@@ -84,25 +85,34 @@ public partial class DataAccess
     }
 
     /// <summary>
-    /// Gets all source systems for the dashboard.
+    /// Gets all source systems for the dashboard with event counts.
     /// </summary>
     public async Task<List<DataObjects.SourceSystem>> GetSourceSystemsAsync()
     {
-        return await data.SourceSystems
+        var sources = await data.SourceSystems
             .Where(x => x.IsActive)
             .OrderBy(x => x.Name)
-            .Select(x => new DataObjects.SourceSystem
-            {
-                SourceSystemId = x.SourceSystemId,
-                Name = x.Name,
-                DisplayName = x.DisplayName,
-                ApiKey = x.ApiKey,
-                ContactEmail = x.ContactEmail,
-                IsActive = x.IsActive,
-                LastEventReceivedAt = x.LastEventReceivedAt,
-                EventCount = x.EventCount,
-            })
             .ToListAsync();
+
+        // Get event counts in one query
+        var sourceIds = sources.Select(x => x.SourceSystemId).ToList();
+        var eventCounts = await data.AccessEvents
+            .Where(x => sourceIds.Contains(x.SourceSystemId))
+            .GroupBy(x => x.SourceSystemId)
+            .Select(g => new { SourceSystemId = g.Key, Count = g.LongCount() })
+            .ToDictionaryAsync(x => x.SourceSystemId, x => x.Count);
+
+        return sources.Select(x => new DataObjects.SourceSystem
+        {
+            SourceSystemId = x.SourceSystemId,
+            Name = x.Name,
+            DisplayName = x.DisplayName,
+            ApiKey = x.ApiKey,
+            ContactEmail = x.ContactEmail,
+            IsActive = x.IsActive,
+            LastEventReceivedAt = x.LastEventReceivedAt,
+            EventCount = eventCounts.GetValueOrDefault(x.SourceSystemId, 0),
+        }).ToList();
     }
 
     /// <summary>
