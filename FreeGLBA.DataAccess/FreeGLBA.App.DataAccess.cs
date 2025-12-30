@@ -94,14 +94,11 @@ public partial class DataAccess
         EFModels.EFModels.SourceSystemItem item;
         var isNew = dto.SourceSystemId == default;
 
-        if (isNew)
-        {
+        if (isNew) {
             item = new EFModels.EFModels.SourceSystemItem();
             item.SourceSystemId = Guid.NewGuid();
             data.SourceSystems.Add(item);
-        }
-        else
-        {
+        } else {
             item = await data.SourceSystems.FindAsync(dto.SourceSystemId);
             if (item == null) return null;
         }
@@ -113,8 +110,7 @@ public partial class DataAccess
         item.IsActive = dto.IsActive;
 
         // Generate API key if new or if regeneration requested
-        if (isNew || dto.ApiKey == "REGENERATE")
-        {
+        if (isNew || dto.ApiKey == "REGENERATE") {
             item.ApiKey = GenerateApiKey();
         }
 
@@ -281,15 +277,12 @@ public partial class DataAccess
         EFModels.EFModels.AccessEventItem item;
         var isNew = dto.AccessEventId == default;
 
-        if (isNew)
-        {
+        if (isNew) {
             item = new EFModels.EFModels.AccessEventItem();
             item.AccessEventId = Guid.NewGuid();
             item.ReceivedAt = DateTime.UtcNow;
             data.AccessEvents.Add(item);
-        }
-        else
-        {
+        } else {
             item = await data.AccessEvents.FindAsync(dto.AccessEventId);
             if (item == null) return null;
         }
@@ -312,19 +305,16 @@ public partial class DataAccess
         await data.SaveChangesAsync();
 
         // Update LastEventReceivedAt on source system (works with all providers including InMemory)
-        if (isNew && dto.SourceSystemId != Guid.Empty)
-        {
+        if (isNew && dto.SourceSystemId != Guid.Empty) {
             var sourceSystem = await data.SourceSystems.FindAsync(dto.SourceSystemId);
-            if (sourceSystem != null)
-            {
+            if (sourceSystem != null) {
                 sourceSystem.LastEventReceivedAt = DateTime.UtcNow;
                 await data.SaveChangesAsync();
             }
         }
 
         // Update DataSubject stats if SubjectId is provided
-        if (!string.IsNullOrEmpty(dto.SubjectId))
-        {
+        if (!string.IsNullOrEmpty(dto.SubjectId)) {
             await UpdateDataSubjectStatsAsync(dto.SubjectId);
         }
         
@@ -438,8 +428,7 @@ public partial class DataAccess
         EFModels.EFModels.DataSubjectItem item;
         var isNew = dto.DataSubjectId == default;
 
-        if (isNew)
-        {
+        if (isNew) {
             item = new EFModels.EFModels.DataSubjectItem();
             item.DataSubjectId = Guid.NewGuid();
             item.FirstAccessedAt = DateTime.UtcNow;
@@ -447,9 +436,7 @@ public partial class DataAccess
             item.TotalAccessCount = 0;
             item.UniqueAccessorCount = 0;
             data.DataSubjects.Add(item);
-        }
-        else
-        {
+        } else {
             item = await data.DataSubjects.FindAsync(dto.DataSubjectId);
             if (item == null) return null;
         }
@@ -572,8 +559,7 @@ public partial class DataAccess
         EFModels.EFModels.ComplianceReportItem item;
         var isNew = dto.ComplianceReportId == default;
 
-        if (isNew)
-        {
+        if (isNew) {
             item = new EFModels.EFModels.ComplianceReportItem();
             item.ComplianceReportId = Guid.NewGuid();
             item.GeneratedAt = DateTime.UtcNow;
@@ -586,9 +572,7 @@ public partial class DataAccess
             item.UniqueSubjects = stats.UniqueSubjects;
             
             data.ComplianceReports.Add(item);
-        }
-        else
-        {
+        } else {
             item = await data.ComplianceReports.FindAsync(dto.ComplianceReportId);
             if (item == null) return null;
         }

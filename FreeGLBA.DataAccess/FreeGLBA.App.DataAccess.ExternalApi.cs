@@ -179,8 +179,7 @@ public partial class DataAccess
         var subject = await data.DataSubjects
             .FirstOrDefaultAsync(x => x.ExternalId == subjectId);
 
-        if (subject == null)
-        {
+        if (subject == null) {
             subject = new EFModels.EFModels.DataSubjectItem
             {
                 DataSubjectId = Guid.NewGuid(),
