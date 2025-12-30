@@ -296,7 +296,10 @@ public partial class DataAccess
 
         item.SourceSystemId = dto.SourceSystemId;
         item.SourceEventId = dto.SourceEventId ?? string.Empty;
-        item.AccessedAt = dto.AccessedAt;
+        // Ensure AccessedAt is stored as UTC
+        item.AccessedAt = dto.AccessedAt.Kind == DateTimeKind.Utc 
+            ? dto.AccessedAt 
+            : DateTime.SpecifyKind(dto.AccessedAt, DateTimeKind.Utc);
         item.UserId = dto.UserId ?? string.Empty;
         item.UserName = dto.UserName ?? string.Empty;
         item.UserEmail = dto.UserEmail ?? string.Empty;
@@ -311,7 +314,12 @@ public partial class DataAccess
         item.IpAddress = dto.IpAddress ?? string.Empty;
         item.AdditionalData = dto.AdditionalData ?? string.Empty;
         item.AgreementText = dto.AgreementText ?? string.Empty;
-        item.AgreementAcknowledgedAt = dto.AgreementAcknowledgedAt;
+        // Ensure AgreementAcknowledgedAt is stored as UTC
+        item.AgreementAcknowledgedAt = dto.AgreementAcknowledgedAt.HasValue
+            ? (dto.AgreementAcknowledgedAt.Value.Kind == DateTimeKind.Utc 
+                ? dto.AgreementAcknowledgedAt.Value 
+                : DateTime.SpecifyKind(dto.AgreementAcknowledgedAt.Value, DateTimeKind.Utc))
+            : null;
 
         await data.SaveChangesAsync();
 
@@ -586,14 +594,22 @@ public partial class DataAccess
         EFModels.EFModels.ComplianceReportItem item;
         var isNew = dto.ComplianceReportId == default;
 
+        // Ensure period dates are treated as UTC (end of day for PeriodEnd)
+        var periodStartUtc = dto.PeriodStart.Kind == DateTimeKind.Utc 
+            ? dto.PeriodStart.Date 
+            : DateTime.SpecifyKind(dto.PeriodStart.Date, DateTimeKind.Utc);
+        var periodEndUtc = dto.PeriodEnd.Kind == DateTimeKind.Utc 
+            ? dto.PeriodEnd.Date.AddDays(1).AddTicks(-1) 
+            : DateTime.SpecifyKind(dto.PeriodEnd.Date.AddDays(1).AddTicks(-1), DateTimeKind.Utc);
+
         if (isNew) {
             item = new EFModels.EFModels.ComplianceReportItem();
             item.ComplianceReportId = Guid.NewGuid();
             item.GeneratedAt = DateTime.UtcNow;
             item.GeneratedBy = "System"; // TODO: Get from CurrentUser when available
             
-            // Calculate statistics for the report period
-            var stats = await CalculateReportStatisticsAsync(dto.PeriodStart, dto.PeriodEnd);
+            // Calculate statistics for the report period (using UTC dates)
+            var stats = await CalculateReportStatisticsAsync(periodStartUtc, periodEndUtc);
             item.TotalEvents = stats.TotalEvents;
             item.UniqueUsers = stats.UniqueUsers;
             item.UniqueSubjects = stats.UniqueSubjects;
@@ -604,10 +620,10 @@ public partial class DataAccess
             if (item == null) return null;
         }
 
-        // User-editable fields
+        // User-editable fields - store dates as UTC
         item.ReportType = dto.ReportType ?? string.Empty;
-        item.PeriodStart = dto.PeriodStart;
-        item.PeriodEnd = dto.PeriodEnd;
+        item.PeriodStart = periodStartUtc;
+        item.PeriodEnd = DateTime.SpecifyKind(dto.PeriodEnd.Date, DateTimeKind.Utc); // Store just the date part
         item.ReportData = dto.ReportData ?? string.Empty;
         item.FileUrl = dto.FileUrl ?? string.Empty;
         // Don't update GeneratedAt, GeneratedBy, or statistics for existing records
@@ -621,17 +637,20 @@ public partial class DataAccess
         dto.TotalEvents = item.TotalEvents;
         dto.UniqueUsers = item.UniqueUsers;
         dto.UniqueSubjects = item.UniqueSubjects;
+        dto.PeriodStart = item.PeriodStart;
+        dto.PeriodEnd = item.PeriodEnd;
         return dto;
     }
 
     /// <summary>
     /// Calculate report statistics for a given period.
+    /// Period dates should already be in UTC.
     /// </summary>
     private async Task<(int TotalEvents, int UniqueUsers, int UniqueSubjects)> CalculateReportStatisticsAsync(
-        DateTime periodStart, DateTime periodEnd)
+        DateTime periodStartUtc, DateTime periodEndUtc)
     {
         var events = await data.AccessEvents
-            .Where(x => x.AccessedAt >= periodStart && x.AccessedAt <= periodEnd)
+            .Where(x => x.AccessedAt >= periodStartUtc && x.AccessedAt <= periodEndUtc)
             .ToListAsync();
 
         return (

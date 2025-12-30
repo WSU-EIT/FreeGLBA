@@ -144,7 +144,7 @@
                                         <span class="badge bg-secondary">@(string.IsNullOrEmpty(item.SourceSystemName) ? "Unknown" : item.SourceSystemName)</span>
                                     </td>
                                     <td>
-                                        <span title="@item.AccessedAt.ToString("f")">@item.AccessedAt.ToString("MMM dd, yyyy HH:mm")</span>
+                                        <span title="@item.AccessedAt.ToLocalTime().ToString("f")">@item.AccessedAt.ToLocalTime().ToString("MMM dd, yyyy HH:mm")</span>
                                     </td>
                                     <td>
                                         <div>@item.UserId</div>
@@ -153,9 +153,13 @@
                                         }
                                     </td>
                                     <td>
-                                        <div>@item.SubjectId</div>
-                                        @if (!string.IsNullOrEmpty(item.SubjectType)) {
-                                            <small class="text-muted">@item.SubjectType</small>
+                                        @if (item.SubjectCount > 1) {
+                                            <span class="badge bg-warning text-dark">@item.SubjectCount subjects</span>
+                                        } else {
+                                            <div>@item.SubjectId</div>
+                                            @if (!string.IsNullOrEmpty(item.SubjectType)) {
+                                                <small class="text-muted">@item.SubjectType</small>
+                                            }
                                         }
                                     </td>
                                     <td>

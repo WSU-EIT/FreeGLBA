@@ -176,27 +176,51 @@ await glbaClient.LogAccessAsync(new GlbaEventRequest {
 
             @* Stats Cards *@
             <div class="row mb-4">
-                <div class="col-md-4">
-                    <div class="card shadow-sm">
-                        <div class="card-body text-center">
-                            <h2 class="mb-0">@_stats.Today.ToString("N0")</h2>
-                            <p class="text-muted mb-0">Today</p>
+                <div class="col-lg-2 col-md-4 col-6 mb-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body text-center py-3">
+                            <h2 class="mb-0 text-primary">@_stats.Today.ToString("N0")</h2>
+                            <p class="text-muted mb-0 small">Events Today</p>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card shadow-sm">
-                        <div class="card-body text-center">
-                            <h2 class="mb-0">@_stats.ThisWeek.ToString("N0")</h2>
-                            <p class="text-muted mb-0">This Week</p>
+                <div class="col-lg-2 col-md-4 col-6 mb-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body text-center py-3">
+                            <h2 class="mb-0 text-primary">@_stats.ThisWeek.ToString("N0")</h2>
+                            <p class="text-muted mb-0 small">Events This Week</p>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card shadow-sm">
-                        <div class="card-body text-center">
-                            <h2 class="mb-0">@_stats.ThisMonth.ToString("N0")</h2>
-                            <p class="text-muted mb-0">This Month</p>
+                <div class="col-lg-2 col-md-4 col-6 mb-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body text-center py-3">
+                            <h2 class="mb-0 text-primary">@_stats.ThisMonth.ToString("N0")</h2>
+                            <p class="text-muted mb-0 small">Events This Month</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-6 mb-3">
+                    <div class="card shadow-sm h-100 border-info">
+                        <div class="card-body text-center py-3">
+                            <h2 class="mb-0 text-info">@_stats.SubjectsToday.ToString("N0")</h2>
+                            <p class="text-muted mb-0 small">Subjects Today</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-6 mb-3">
+                    <div class="card shadow-sm h-100 border-info">
+                        <div class="card-body text-center py-3">
+                            <h2 class="mb-0 text-info">@_stats.SubjectsThisWeek.ToString("N0")</h2>
+                            <p class="text-muted mb-0 small">Subjects This Week</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-6 mb-3">
+                    <div class="card shadow-sm h-100 border-success">
+                        <div class="card-body text-center py-3">
+                            <h2 class="mb-0 text-success">@_stats.TotalSubjects.ToString("N0")</h2>
+                            <p class="text-muted mb-0 small">Total Subjects</p>
                         </div>
                     </div>
                 </div>
@@ -213,30 +237,61 @@ await glbaClient.LogAccessAsync(new GlbaEventRequest {
                     </a>
                 </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Accessed At</th>
-                                    <th>User Id</th>
-                                    <th>Subject Id</th>
-                                    <th>Data Category</th>
-                                    <th>Access Type</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var evt in _recentEvents) {
+                    @if (_recentEvents.Count == 0) {
+                        <div class="text-center text-muted py-4">
+                            <i class="fa-solid fa-inbox fa-2x mb-2"></i>
+                            <p class="mb-0">No access events recorded yet.</p>
+                            <small>Events will appear here as they are logged by source systems.</small>
+                        </div>
+                    } else {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
                                     <tr>
-                                        <td>@evt.AccessedAt.ToString("g")</td>
-                                        <td>@evt.UserId</td>
-                                        <td>@evt.SubjectId</td>
-                                        <td>@evt.DataCategory</td>
-                                        <td>@evt.AccessType</td>
+                                        <th>Accessed At</th>
+                                        <th>User</th>
+                                        <th>Subject(s)</th>
+                                        <th>Data Category</th>
+                                        <th>Access Type</th>
                                     </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody>
+                                    @foreach (var evt in _recentEvents) {
+                                        <tr>
+                                            <td>
+                                                <span title="@evt.AccessedAt.ToLocalTime().ToString("f")">@GetTimeAgo(evt.AccessedAt)</span>
+                                            </td>
+                                            <td>
+                                                <div>@evt.UserId</div>
+                                                @if (!string.IsNullOrEmpty(evt.UserName)) {
+                                                    <small class="text-muted">@evt.UserName</small>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (evt.SubjectCount > 1) {
+                                                    <span class="badge bg-warning text-dark">@evt.SubjectCount subjects</span>
+                                                } else {
+                                                    <span>@evt.SubjectId</span>
+                                                }
+                                            </td>
+                                            <td>@(string.IsNullOrEmpty(evt.DataCategory) ? "-" : evt.DataCategory)</td>
+                                            <td>
+                                                @{
+                                                    var badgeClass = evt.AccessType?.ToLower() switch {
+                                                        "export" or "download" => "bg-warning text-dark",
+                                                        "view" or "query" => "bg-info",
+                                                        "print" => "bg-secondary",
+                                                        _ => "bg-primary"
+                                                    };
+                                                }
+                                                <span class="badge @badgeClass">@evt.AccessType</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
                 </div>
             </div>
 
@@ -359,10 +414,17 @@ await glbaClient.LogAccessAsync(new GlbaEventRequest {
     private string GetTimeAgo(DateTime? dt)
     {
         if (!dt.HasValue) return "Never";
-        var diff = DateTime.UtcNow - dt.Value;
+        return GetTimeAgo(dt.Value);
+    }
+
+    private string GetTimeAgo(DateTime dt)
+    {
+        var diff = DateTime.UtcNow - dt;
+        if (diff.TotalSeconds < 0) return "Just now"; // Future date edge case
         if (diff.TotalMinutes < 1) return "Just now";
         if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes} min ago";
         if (diff.TotalHours < 24) return $"{(int)diff.TotalHours} hours ago";
-        return $"{(int)diff.TotalDays} days ago";
+        if (diff.TotalDays < 7) return $"{(int)diff.TotalDays} days ago";
+        return dt.ToString("MMM d, yyyy");
     }
 }

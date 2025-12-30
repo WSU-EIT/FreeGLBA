@@ -78,6 +78,14 @@ public partial class DataObjects
         public long Today { get; set; }
         public long ThisWeek { get; set; }
         public long ThisMonth { get; set; }
+        /// <summary>Total number of data subjects in the system.</summary>
+        public long TotalSubjects { get; set; }
+        /// <summary>Subjects accessed today.</summary>
+        public long SubjectsToday { get; set; }
+        /// <summary>Subjects accessed this week.</summary>
+        public long SubjectsThisWeek { get; set; }
+        /// <summary>Subjects accessed this month.</summary>
+        public long SubjectsThisMonth { get; set; }
         public Dictionary<string, long> ByCategory { get; set; } = new();
         public Dictionary<string, long> ByAccessType { get; set; } = new();
     }

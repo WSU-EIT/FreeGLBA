@@ -67,6 +67,16 @@ public partial class DataAccess
             ? (subjectIdList!.Count > 1 ? "BULK" : subjectIdList[0])
             : request.SubjectId;
 
+        // Ensure dates are UTC
+        var accessedAtUtc = request.AccessedAt.Kind == DateTimeKind.Utc 
+            ? request.AccessedAt 
+            : DateTime.SpecifyKind(request.AccessedAt, DateTimeKind.Utc);
+        var agreementAtUtc = request.AgreementAcknowledgedAt.HasValue
+            ? (request.AgreementAcknowledgedAt.Value.Kind == DateTimeKind.Utc 
+                ? request.AgreementAcknowledgedAt.Value 
+                : DateTime.SpecifyKind(request.AgreementAcknowledgedAt.Value, DateTimeKind.Utc))
+            : accessedAtUtc;
+
         // Create event record
         var evt = new EFModels.EFModels.AccessEventItem
         {
@@ -74,7 +84,7 @@ public partial class DataAccess
             SourceSystemId = sourceSystemId,
             ReceivedAt = DateTime.UtcNow,
             SourceEventId = request.SourceEventId,
-            AccessedAt = request.AccessedAt,
+            AccessedAt = accessedAtUtc,
             UserId = request.UserId,
             UserName = request.UserName,
             UserEmail = request.UserEmail,
@@ -89,7 +99,7 @@ public partial class DataAccess
             IpAddress = request.IpAddress,
             AdditionalData = request.AdditionalData,
             AgreementText = request.AgreementText,
-            AgreementAcknowledgedAt = request.AgreementAcknowledgedAt ?? request.AccessedAt,
+            AgreementAcknowledgedAt = agreementAtUtc,
         };
 
         data.AccessEvents.Add(evt);
@@ -154,11 +164,26 @@ public partial class DataAccess
         var weekStart = now.Date.AddDays(-(int)now.DayOfWeek);
         var monthStart = new DateTime(now.Year, now.Month, 1);
 
+        // Event counts
+        var eventsToday = await data.AccessEvents.CountAsync(x => x.AccessedAt >= todayStart);
+        var eventsThisWeek = await data.AccessEvents.CountAsync(x => x.AccessedAt >= weekStart);
+        var eventsThisMonth = await data.AccessEvents.CountAsync(x => x.AccessedAt >= monthStart);
+
+        // Subject counts - subjects accessed in each period
+        var subjectsToday = await data.DataSubjects.CountAsync(x => x.LastAccessedAt >= todayStart);
+        var subjectsThisWeek = await data.DataSubjects.CountAsync(x => x.LastAccessedAt >= weekStart);
+        var subjectsThisMonth = await data.DataSubjects.CountAsync(x => x.LastAccessedAt >= monthStart);
+        var totalSubjects = await data.DataSubjects.CountAsync();
+
         return new DataObjects.GlbaStats
         {
-            Today = await data.AccessEvents.CountAsync(x => x.AccessedAt >= todayStart),
-            ThisWeek = await data.AccessEvents.CountAsync(x => x.AccessedAt >= weekStart),
-            ThisMonth = await data.AccessEvents.CountAsync(x => x.AccessedAt >= monthStart),
+            Today = eventsToday,
+            ThisWeek = eventsThisWeek,
+            ThisMonth = eventsThisMonth,
+            TotalSubjects = totalSubjects,
+            SubjectsToday = subjectsToday,
+            SubjectsThisWeek = subjectsThisWeek,
+            SubjectsThisMonth = subjectsThisMonth,
         };
     }
 
@@ -181,6 +206,8 @@ public partial class DataAccess
                 UserDepartment = x.UserDepartment,
                 SubjectId = x.SubjectId,
                 SubjectType = x.SubjectType,
+                SubjectIds = x.SubjectIds,
+                SubjectCount = x.SubjectCount,
                 DataCategory = x.DataCategory,
                 AccessType = x.AccessType,
                 Purpose = x.Purpose,
