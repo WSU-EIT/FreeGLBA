@@ -556,8 +556,8 @@ Traditional switch for complex logic with side effects.
 |----------|-------------|----------------|---------|
 | **Base Framework** | Stock FreeCRM files | `{ClassName}.cs` | `DataAccess.cs`, `User.cs` |
 | **Base Customization** | Extend base FreeCRM classes | `{ClassName}.App.cs` | `DataAccess.App.cs` |
-| **Project Extension** | Extend base + add project methods | `{ClassName}.App.{ProjectName}.cs` | `DataAccess.App.FreeManager.cs` |
-| **Project-Specific NEW** | Entirely new features | `{ProjectName}.App.{Feature}.cs` | `FreeManager.App.EntityWizard.cs` |
+| **Project Extension** | Extend base + add project methods | `{ClassName}.App.{ProjectName}.cs` | `DataAccess.App.FreeGLBA.cs` |
+| **Project-Specific NEW** | Entirely new features | `{ProjectName}.App.{Feature}.cs` | `FreeGLBA.App.Dashboard.cs` |
 
 ### Project-Specific Files (NEW Features)
 
@@ -571,11 +571,11 @@ Traditional switch for complex logic with side effects.
 
 | Extension | Pattern | Example |
 |-----------|---------|---------|
-| `.cs` | `{ProjectName}.App.{Feature}.cs` | `FreeManager.App.EntityTemplates.cs` |
-| `.razor` | `{ProjectName}.App.{Feature}.razor` | `FreeManager.App.EntityWizard.razor` |
-| `.js` | `{ProjectName}.App.{Feature}.js` | `FreeManager.App.EntityWizard.js` |
-| `.css` | `{ProjectName}.App.{Feature}.css` | `FreeManager.App.EntityWizard.css` |
-| `.json` | `{ProjectName}.App.{Feature}.json` | `FreeManager.App.Config.json` |
+| `.cs` | `{ProjectName}.App.{Feature}.cs` | `FreeGLBA.App.ReportGenerator.cs` |
+| `.razor` | `{ProjectName}.App.{Feature}.razor` | `FreeGLBA.App.Dashboard.razor` |
+| `.js` | `{ProjectName}.App.{Feature}.js` | `FreeGLBA.App.Dashboard.js` |
+| `.css` | `{ProjectName}.App.{Feature}.css` | `FreeGLBA.App.Dashboard.css` |
+| `.json` | `{ProjectName}.App.{Feature}.json` | `FreeGLBA.App.Config.json` |
 
 #### Multi-Level Naming (for large features)
 
@@ -587,35 +587,29 @@ Nest as deep as needed to organize code logically:
 
 **Examples:**
 ```
-FreeManager.App.EntityWizard.razor                           # Main page
-FreeManager.App.EntityWizard.State.cs                        # State management
-FreeManager.App.EntityWizard.Handlers.cs                     # Event handlers
-FreeManager.App.EntityWizard.Generation.cs                   # Code generation
+FreeGLBA.App.Dashboard.razor                           # Main page
+FreeGLBA.App.Dashboard.State.cs                        # State management
+FreeGLBA.App.Dashboard.Handlers.cs                     # Event handlers
+FreeGLBA.App.Dashboard.Charts.cs                       # Chart components
 
-FreeManager.App.EntityTemplates.cs                           # Coordinator
-FreeManager.App.EntityTemplates.Controller.cs                # Controller templates
-FreeManager.App.EntityTemplates.DataAccess.cs                # DataAccess templates
-FreeManager.App.EntityTemplates.DataObjects.cs               # DTO templates
-FreeManager.App.EntityTemplates.EFModel.cs                   # EF Model templates
-FreeManager.App.EntityTemplates.RazorPages.cs                # Razor templates
+FreeGLBA.App.SourceSystems.cs                          # Source system management
+FreeGLBA.App.SourceSystems.List.razor                  # List view
+FreeGLBA.App.SourceSystems.Edit.razor                  # Edit form
 
-FreeManager.App.DataObjects.cs                               # DTO coordinator
-FreeManager.App.DataObjects.EntityWizard.cs                  # Wizard DTOs
-FreeManager.App.DataObjects.Projects.cs                      # Project DTOs
-FreeManager.App.DataObjects.Persistence.cs                   # Persistence DTOs
+FreeGLBA.App.DataObjects.cs                            # DTO coordinator
+FreeGLBA.App.DataObjects.ExternalApi.cs                # External API DTOs
+FreeGLBA.App.DataObjects.Reports.cs                    # Report DTOs
 
-FreeManager.App.DataAccess.cs                                # DataAccess coordinator
-FreeManager.App.DataAccess.Projects.cs                       # Project CRUD
-FreeManager.App.DataAccess.Files.cs                          # File operations
-FreeManager.App.DataAccess.Builds.cs                         # Build operations
-FreeManager.App.DataAccess.Templates.cs                      # Template queries
-FreeManager.App.DataAccess.EntityWizardPersistence.cs        # Wizard persistence
+FreeGLBA.App.DataAccess.cs                             # DataAccess coordinator
+FreeGLBA.App.DataAccess.SourceSystems.cs               # Source system CRUD
+FreeGLBA.App.DataAccess.AccessEvents.cs                # Access event CRUD
+FreeGLBA.App.DataAccess.Reports.cs                     # Report generation
 
-FreeManager.App.EFDataModel.cs                               # EF DbContext extension
-FreeManager.App.FMProject.cs                                 # Entity class
-FreeManager.App.FMAppFile.cs                                 # Entity class
-FreeManager.App.FMAppFileVersion.cs                          # Entity class
-FreeManager.App.FMBuild.cs                                   # Entity class
+FreeGLBA.App.EFDataModel.cs                            # EF DbContext extension
+FreeGLBA.App.AccessEvent.cs                            # Entity class
+FreeGLBA.App.SourceSystem.cs                           # Entity class
+FreeGLBA.App.DataSubject.cs                            # Entity class
+FreeGLBA.App.ComplianceReport.cs                       # Entity class
 ```
 
 #### Blazor Component Naming (IMPORTANT)
@@ -624,35 +618,35 @@ Blazor converts file name dots to underscores for class names:
 
 | File Name | Generated Class Name |
 |-----------|---------------------|
-| `EntityWizard.razor` | `EntityWizard` |
-| `EntityWizard.App.razor` | `EntityWizard_App` |
-| `FreeManager.App.EntityWizard.razor` | `FreeManager_App_EntityWizard` |
+| `Dashboard.razor` | `Dashboard` |
+| `Dashboard.App.razor` | `Dashboard_App` |
+| `FreeGLBA.App.Dashboard.razor` | `FreeGLBA_App_Dashboard` |
 
 **When referencing components in markup:**
 ```razor
-@* File: FreeManager.App.EntityWizardStepper.razor *@
+@* File: FreeGLBA.App.EventList.razor *@
 @* Reference as: *@
-<FreeManager_App_EntityWizardStepper Steps="@_steps" />
+<FreeGLBA_App_EventList Events="@_events" />
 
 @* NOT as (this won't work): *@
-<EntityWizardStepper_App />  @* WRONG - old pattern *@
+<EventList_App />  @* WRONG - old pattern *@
 ```
 
 **Ensure _Imports.razor includes the namespace:**
 ```razor
-@using FreeManager.Client.Shared.Wizard
+@using FreeGLBA.Client.Shared
 ```
 
 #### Drop Redundant Prefixes
 
-When using `{ProjectName}.App.*`, remove short prefixes like `FM`:
+When using `{ProjectName}.App.*`, remove short prefixes:
 
 | Old Name | New Name |
 |----------|----------|
-| `FMWizardTemplates.cs` | `FreeManager.App.WizardTemplates.cs` |
-| `FMEntityWizard.razor` | `FreeManager.App.EntityWizard.razor` |
-| `FMProjectEditor.razor` | `FreeManager.App.ProjectEditor.razor` |
-| `FMBuild.cs` | `FreeManager.App.FMBuild.cs` *(keep FM in entity names for DB table clarity)* |
+| `GLBADashboard.cs` | `FreeGLBA.App.Dashboard.cs` |
+| `GLBAEventList.razor` | `FreeGLBA.App.EventList.razor` |
+| `GLBASourceEditor.razor` | `FreeGLBA.App.SourceEditor.razor` |
+| `AccessEvent.cs` | `FreeGLBA.App.AccessEvent.cs` |
 
 ### Framework Customization Files
 
@@ -660,9 +654,9 @@ Files that customize or extend **existing** FreeCRM base classes:
 
 ```
 DataController.App.cs              # Customize base DataController
-DataController.App.FreeManager.cs  # Add FreeManager-specific endpoints
+DataController.App.FreeGLBA.cs     # Add FreeGLBA-specific endpoints
 DataAccess.App.cs                  # Customize base DataAccess
-DataAccess.App.FreeManager.cs      # Add FreeManager-specific methods
+DataAccess.App.FreeGLBA.cs         # Add FreeGLBA-specific methods
 DataObjects.App.cs                 # Customize base DataObjects
 ConfigurationHelper.App.cs         # Add config properties (in DataObjects only!)
 Program.App.cs                     # Customize startup
@@ -677,20 +671,19 @@ Modules.App.razor                  # Add custom JS/CSS to layout
 When using multi-level partials, create a coordinator file documenting all related files:
 
 ```csharp
-// FreeManager.App.DataAccess.cs (coordinator)
-namespace FreeManager;
+// FreeGLBA.App.DataAccess.cs (coordinator)
+namespace FreeGLBA;
 
-#region FreeManager Platform - DataAccess Methods (Coordinator)
+#region FreeGLBA Platform - DataAccess Methods (Coordinator)
 // ============================================================================
-// FREEMANAGER DATAACCESS EXTENSION
-// This partial class adds FreeManager-specific DataAccess methods.
+// FREEGLBA DATAACCESS EXTENSION
+// This partial class adds FreeGLBA-specific DataAccess methods.
 // Methods are split into feature-specific partial files:
 //
-// - FreeManager.App.DataAccess.Projects.cs       → Project CRUD
-// - FreeManager.App.DataAccess.Files.cs          → File operations
-// - FreeManager.App.DataAccess.Builds.cs         → Build operations
-// - FreeManager.App.DataAccess.Templates.cs      → Template queries
-// - FreeManager.App.DataAccess.EntityWizardPersistence.cs → Wizard saves
+// - FreeGLBA.App.DataAccess.SourceSystems.cs    → Source system CRUD
+// - FreeGLBA.App.DataAccess.AccessEvents.cs     → Access event operations
+// - FreeGLBA.App.DataAccess.Reports.cs          → Report generation
+// - FreeGLBA.App.DataAccess.ExternalApi.cs      → External API handling
 //
 // These are NOT part of the stock FreeCRM framework.
 // ============================================================================
@@ -713,12 +706,12 @@ public partial class DataAccess
 | Scenario | Pattern | Example |
 |----------|---------|---------|
 | Modify base FreeCRM behavior | `{Base}.App.cs` | `DataAccess.App.cs` |
-| Add methods to base class | `{Base}.App.{Project}.cs` | `DataAccess.App.FreeManager.cs` |
-| Create new feature/page | `{Project}.App.{Feature}.razor` | `FreeManager.App.EntityWizard.razor` |
-| Create new entity class | `{Project}.App.{Entity}.cs` | `FreeManager.App.FMProject.cs` |
-| Create new DTO collection | `{Project}.App.DataObjects.{Area}.cs` | `FreeManager.App.DataObjects.Projects.cs` |
-| Create new helper/utility | `{Project}.App.{Name}.cs` | `FreeManager.App.EntityTemplates.cs` |
-| Split large feature | `{Project}.App.{Feature}.{Sub}.cs` | `FreeManager.App.EntityWizard.State.cs` |
+| Add methods to base class | `{Base}.App.{Project}.cs` | `DataAccess.App.FreeGLBA.cs` |
+| Create new feature/page | `{Project}.App.{Feature}.razor` | `FreeGLBA.App.Dashboard.razor` |
+| Create new entity class | `{Project}.App.{Entity}.cs` | `FreeGLBA.App.AccessEvent.cs` |
+| Create new DTO collection | `{Project}.App.DataObjects.{Area}.cs` | `FreeGLBA.App.DataObjects.ExternalApi.cs` |
+| Create new helper/utility | `{Project}.App.{Name}.cs` | `FreeGLBA.App.ReportGenerator.cs` |
+| Split large feature | `{Project}.App.{Feature}.{Sub}.cs` | `FreeGLBA.App.Dashboard.State.cs` |
 
 ### Verification
 
@@ -726,17 +719,17 @@ Before committing, verify naming compliance:
 
 ```bash
 # List all project-specific files (should all start with ProjectName.App.)
-find . -name "FreeManager.App.*" -type f
+find . -name "FreeGLBA.App.*" -type f
 
 # Find any mis-named files (should return nothing for custom files)
-find . -name "*App.FreeManager*" -type f  # Wrong order
-find . -name "FM*.cs" -type f             # Old FM prefix without proper pattern
+find . -name "*App.FreeGLBA*" -type f  # Wrong order
 ```
 
 ---
 
 ## DataObjects Project
 
+````````markdown
 ### Class Structure
 
 All DTOs live in a single `DataObjects` partial class:

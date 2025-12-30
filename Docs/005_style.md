@@ -10,17 +10,17 @@
 
 **All project-specific files MUST use the `{ProjectName}.App.{Feature}` naming pattern.**
 
-This is mandatory, not optional. See `docs/004_styleguide.md` → "File Organization" for complete rules.
+This is mandatory, not optional. See `Docs/004_styleguide.md` → "File Organization" for complete rules.
 
 **Quick reference:**
 ```
 {ProjectName}.App.{Feature}.{OptionalSub}.{Extension}
 
 Examples:
-FreeManager.App.EntityWizard.razor         # New page
-FreeManager.App.EntityWizard.State.cs      # Partial (state mgmt)
-FreeManager.App.DataObjects.Projects.cs    # DTOs
-FreeManager.App.FMProject.cs               # Entity class
+FreeGLBA.App.Dashboard.razor              # New page
+FreeGLBA.App.Dashboard.State.cs           # Partial (state mgmt)
+FreeGLBA.App.DataObjects.ExternalApi.cs   # DTOs
+FreeGLBA.App.AccessEvent.cs               # Entity class
 ```
 
 **Why:** Instant identification of your code vs base FreeCRM during framework updates.
@@ -45,22 +45,22 @@ The style guides establish consistent patterns for how code should be written an
 ## Key Style Topics
 
 ### File Naming (MANDATORY)
-**Location:** `docs/004_styleguide.md` → "File Organization"
+**Location:** `Docs/004_styleguide.md` → "File Organization"
 
 | Category | Pattern | Example |
 |----------|---------|---------|
-| New feature | `{Project}.App.{Feature}.cs` | `FreeManager.App.EntityWizard.cs` |
-| Entity class | `{Project}.App.{Entity}.cs` | `FreeManager.App.FMProject.cs` |
-| Partial split | `{Project}.App.{Feature}.{Sub}.cs` | `FreeManager.App.EntityWizard.State.cs` |
+| New feature | `{Project}.App.{Feature}.cs` | `FreeGLBA.App.Dashboard.cs` |
+| Entity class | `{Project}.App.{Entity}.cs` | `FreeGLBA.App.AccessEvent.cs` |
+| Partial split | `{Project}.App.{Feature}.{Sub}.cs` | `FreeGLBA.App.Dashboard.State.cs` |
 | Base extension | `{Base}.App.cs` | `DataController.App.cs` |
 
 ### Blazor Component Class Names
-**Location:** `docs/004_styleguide.md` → "Blazor Component Naming"
+**Location:** `Docs/004_styleguide.md` → "Blazor Component Naming"
 
 Blazor converts dots to underscores:
-- File: `FreeManager.App.EntityWizard.razor`
-- Class: `FreeManager_App_EntityWizard`
-- Reference: `<FreeManager_App_EntityWizard />`
+- File: `FreeGLBA.App.Dashboard.razor`
+- Class: `FreeGLBA_App_Dashboard`
+- Reference: `<FreeGLBA_App_Dashboard />`
 
 ---
 
@@ -91,4 +91,4 @@ Blazor converts dots to underscores:
 ---
 
 *Category: Style Guides*
-*Last Updated: 2025-12-24*
+*Last Updated: 2025-01-01*

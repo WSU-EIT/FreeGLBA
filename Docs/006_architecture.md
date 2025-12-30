@@ -1,4 +1,4 @@
-# 006 Architecture Index
+﻿# 006 Architecture Index
 
 > Category index for FreeCRM architecture and design documentation.
 
@@ -8,7 +8,7 @@
 
 ## FreeCRM Ecosystem Context
 
-This documentation describes FreeCRM patterns. FreeCRM-main is the authoritative public base template. FreeManager and FreeCICD are public example extensions demonstrating how to build on FreeCRM.
+This documentation describes FreeCRM patterns. FreeCRM-main is the authoritative public base template. FreeGLBA and FreeCICD are public example extensions demonstrating how to build on FreeCRM.
 
 ---
 
@@ -71,4 +71,4 @@ FreeCRM follows these core architectural principles:
 ---
 
 *Category: Architecture*
-*Last Updated: 2025-12-23*
+*Last Updated: 2025-01-01*

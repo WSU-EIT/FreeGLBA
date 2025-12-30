@@ -28,10 +28,10 @@
 
 **Do this at the start of every conversation:**
 
-1. **READ IN FULL:** `docs/000_quickstart.md` (this file)
-2. **READ IN FULL:** `docs/001_roleplay.md` (discussion + planning)
-3. **READ IN FULL:** `docs/002_docsguide.md` (standards)
-4. **SKIM:** `docs/003_templates.md` (grab templates as needed)
+1. **READ IN FULL:** `Docs/000_quickstart.md` (this file)
+2. **READ IN FULL:** `Docs/001_roleplay.md` (discussion + planning)
+3. **READ IN FULL:** `Docs/002_docsguide.md` (standards)
+4. **SKIM:** `Docs/003_templates.md` (grab templates as needed)
 5. **SCAN:** Any other docs — read headers to understand purpose
 
 **Confirm:**
@@ -58,10 +58,10 @@
 When user says "sitrep" / "status":
 
 ```
-## Sitrep: <PROJECT_NAME>
+## Sitrep: FreeGLBA
 
 **As of:** [date]
-**Purpose:** [one-liner from project]
+**Purpose:** GLBA Compliance Data Access Tracking System
 
 **Current:** [from tracker doc or "no active sprint"]
 - Task 1: status
@@ -79,9 +79,9 @@ Commands: `build` · `test` · `explore` · `plan [thing]`
 
 When user says "explore" / "deep dive":
 
-1. **READ IN FULL:** All docs in `docs/` folder
-2. **SCAN:** Project files (`.csproj`, `package.json`, etc.)
-3. **READ:** Main entry point (`Program.cs`, `main.py`, etc.)
+1. **READ IN FULL:** All docs in `Docs/` folder
+2. **SCAN:** Project files (`.csproj`)
+3. **READ:** Main entry point (`Program.cs`)
 4. **SAMPLE:** One model, one endpoint, one UI component
 5. **OUTPUT:** Summary of architecture, tech, and current state
 
@@ -93,8 +93,8 @@ When user says "explore" / "deep dive":
 
 ## What is This Project?
 
-**Name:** FreeManager (FreeCRM Example Extension)
-**One-liner:** Example project extending FreeCRM + comprehensive FreeCRM documentation
+**Name:** FreeGLBA
+**One-liner:** GLBA Compliance Data Access Tracking System - tracks access to sensitive financial data
 **Stack:** Blazor + C# + .NET 10
 **Fork-friendly:** Keep doc structure, swap toolchain commands.
 
@@ -107,11 +107,11 @@ This project is part of the FreeCRM ecosystem:
 | Project | Status | Description |
 |---------|--------|-------------|
 | **FreeCRM-main** | Public | Base template — authoritative source for all patterns |
+| **FreeGLBA** | Public | GLBA compliance tracking — demonstrates extending FreeCRM |
 | **FreeCICD** | Public | Example extension — community-contributed CI/CD tooling |
-| **FreeManager** | Public | Example extension — demonstrates extending FreeCRM + houses docs |
 | nForm, Helpdesk4, etc. | Private | Production implementations — referenced but not accessible |
 
-**Namespace Note:** FreeManager uses the original FreeCRM namespace. This is intentional — demonstrates you can fork and extend without renaming. Only rename if you need multiple FreeCRM projects in one solution.
+**Namespace Note:** FreeGLBA uses the original FreeCRM namespace patterns. This is intentional — demonstrates you can fork and extend without renaming. Only rename if you need multiple FreeCRM projects in one solution.
 
 ---
 
@@ -125,23 +125,23 @@ This project is part of the FreeCRM ecosystem:
 
 | Type | Example |
 |------|---------|
-| New page | `FreeManager.App.EntityWizard.razor` |
-| Partial file | `FreeManager.App.EntityWizard.State.cs` |
-| New entity | `FreeManager.App.FMProject.cs` |
-| New DTOs | `FreeManager.App.DataObjects.Projects.cs` |
-| Base extension | `DataController.App.FreeManager.cs` |
+| New page | `FreeGLBA.App.Dashboard.razor` |
+| Partial file | `FreeGLBA.App.Dashboard.State.cs` |
+| New entity | `FreeGLBA.App.AccessEvent.cs` |
+| New DTOs | `FreeGLBA.App.DataObjects.ExternalApi.cs` |
+| Base extension | `DataController.App.FreeGLBA.cs` |
 
 **Why this matters:**
-- Find all your code instantly: `find . -name "FreeManager.App.*"`
+- Find all your code instantly: `find . -name "FreeGLBA.App.*"`
 - Safe during FreeCRM framework updates
 - Clear separation of base vs custom
 
 **Blazor components:** Dots become underscores in class names:
-- File: `FreeManager.App.EntityWizard.razor`
-- Class: `FreeManager_App_EntityWizard`
-- Usage: `<FreeManager_App_EntityWizard />`
+- File: `FreeGLBA.App.Dashboard.razor`
+- Class: `FreeGLBA_App_Dashboard`
+- Usage: `<FreeGLBA_App_Dashboard />`
 
-**Full details:** See `docs/004_styleguide.md` → "File Organization"
+**Full details:** See `Docs/004_styleguide.md` → "File Organization"
 
 ---
 
@@ -150,75 +150,76 @@ This project is part of the FreeCRM ecosystem:
 | Required | Notes |
 |----------|-------|
 | Git | Latest |
-| SDK | Version in `global.json` or repo config |
-| IDE | VS / Rider / VS Code |
+| .NET 10 SDK | Check with `dotnet --version` |
+| IDE | VS 2022+ / Rider / VS Code |
 
 | Optional | When Needed |
 |----------|-------------|
-| Docker | Running dependencies locally |
-| Node.js | Building web assets |
-| `<OTHER>` | `<REASON>` |
+| Docker | Running database containers |
+| SQL Server / PostgreSQL / MySQL | Production database |
 
 ---
 
 ## Setup
 
 ```bash
-git clone <REPO_URL>
-cd <REPO_FOLDER>
-dotnet restore   # or: npm install, pip install -r requirements.txt
-dotnet build     # or: npm run build, etc.
+git clone https://github.com/WSU-EIT/FreeGLBA.git
+cd FreeGLBA
+dotnet restore
+dotnet build
 ```
 
 ### Run Tests First
 
 ```bash
-dotnet test      # or: npm test, pytest, etc.
+dotnet test
 ```
 
 ---
 
 ## Running Locally
 
-### Single App
+### Single Command
 
 ```bash
-dotnet run --project src/<AppProject>
+dotnet run --project FreeGLBA
 ```
 
-### Web + API (Two Terminals)
-
-```bash
-# Terminal 1 - API
-dotnet run --project src/<ApiProject>
-
-# Terminal 2 - Web
-dotnet run --project src/<WebProject>
-```
+Navigate to `https://localhost:5001`
 
 ### Smoke Check
 
 - [ ] App loads in browser
-- [ ] Health endpoint responds
-- [ ] Basic flow works
+- [ ] Login page appears
+- [ ] Dashboard loads after login
 
 ---
 
 ## Configuration
 
-### Local Dev (User Secrets)
+### Local Dev (appsettings.Development.json)
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=.;Database=FreeGLBA;Trusted_Connection=true;"
+  },
+  "DatabaseType": "SQLServer"
+}
+```
+
+### User Secrets (for sensitive values)
 
 ```bash
-dotnet user-secrets set "ConnectionStrings:Default" "<VALUE>"
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<VALUE>"
 dotnet user-secrets set "Auth:Key" "<VALUE>"
-dotnet user-secrets set "<KEY>" "<VALUE>"
 ```
 
 ### Production (Environment Variables)
 
 ```
-ConnectionStrings__Default=...
-Auth__Key=...
+ConnectionStrings__DefaultConnection=...
+DatabaseType=SQLServer
 ```
 
 ---
@@ -228,10 +229,10 @@ Auth__Key=...
 | Task | Command |
 |------|---------|
 | Build | `dotnet build` |
+| Run | `dotnet run --project FreeGLBA` |
 | Test | `dotnet test` |
 | Format | `dotnet format` |
-| Add Migration | `dotnet ef migrations add <Name> --project src/<DataProject>` |
-| Update DB | `dotnet ef database update --project src/<DataProject>` |
+| Clean | `dotnet clean` |
 
 ---
 
@@ -239,9 +240,10 @@ Auth__Key=...
 
 | Problem | Fix |
 |---------|-----|
-| Won't build | Check SDK version matches `global.json`; run `dotnet clean && dotnet build` |
-| Config missing | Re-check user-secrets naming; verify `appsettings.Development.json` |
+| Won't build | Check .NET 10 SDK installed; run `dotnet clean && dotnet build` |
+| Config missing | Check `appsettings.Development.json` exists |
 | Port in use | Change in `launchSettings.json` or kill process |
+| Database error | Verify connection string and database exists |
 
 ---
 
@@ -253,5 +255,5 @@ Auth__Key=...
 
 ---
 
-*Created: `<DATE>`*  
-*Maintained by: [Quality]*
+*Created: 2025-01-01*  
+*Maintained by: WSU-EIT*

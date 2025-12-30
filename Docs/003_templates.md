@@ -440,9 +440,9 @@ Use when: Speccing out a new feature before building.
 ### Files to Create/Modify
 
 **New files** (must use `{ProjectName}.App.{Feature}` pattern):
-- `FreeManager.App.{Feature}.razor` — {description}
-- `FreeManager.App.{Feature}.cs` — {description}
-- `FreeManager.App.DataObjects.{Feature}.cs` — {DTOs}
+- `FreeGLBA.App.{Feature}.razor` — {description}
+- `FreeGLBA.App.{Feature}.cs` — {description}
+- `FreeGLBA.App.DataObjects.{Feature}.cs` — {DTOs}
 
 **Modified files**:
 - `{existing file}` — {what changes}

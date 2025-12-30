@@ -233,19 +233,19 @@ These apply to docs AND code:
 
 | Creating... | Name it... |
 |-------------|-----------|
-| New page | `FreeManager.App.EntityWizard.razor` |
-| Code partial | `FreeManager.App.EntityWizard.State.cs` |
-| New entity | `FreeManager.App.FMProject.cs` |
-| New DTOs | `FreeManager.App.DataObjects.Projects.cs` |
-| Base class extension | `DataController.App.FreeManager.cs` |
+| New page | `FreeGLBA.App.Dashboard.razor` |
+| Code partial | `FreeGLBA.App.Dashboard.State.cs` |
+| New entity | `FreeGLBA.App.AccessEvent.cs` |
+| New DTOs | `FreeGLBA.App.DataObjects.ExternalApi.cs` |
+| Base class extension | `DataController.App.FreeGLBA.cs` |
 
 **Blazor component references:**
 ```razor
-@* File: FreeManager.App.EntityWizard.razor → Class: FreeManager_App_EntityWizard *@
-<FreeManager_App_EntityWizard />
+@* File: FreeGLBA.App.Dashboard.razor → Class: FreeGLBA_App_Dashboard *@
+<FreeGLBA_App_Dashboard />
 ```
 
-**Full rules:** See `docs/004_styleguide.md` → "File Organization"
+**Full rules:** See `Docs/004_styleguide.md` → "File Organization"
 
 ---
 
@@ -262,5 +262,5 @@ All templates are in **doc 003 (Templates)** — including:
 
 ---
 
-*Created: `<DATE>`*  
-*Maintained by: [Quality]*
+*Created: 2025-01-01*  
+*Maintained by: WSU-EIT*

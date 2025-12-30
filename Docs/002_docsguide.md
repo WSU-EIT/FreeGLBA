@@ -1,4 +1,4 @@
-# 002 — Docs Guide: Writing and Organizing Documentation
+﻿# 002 — Docs Guide: Writing and Organizing Documentation
 
 > **Document ID:** 002
 > **Category:** Guide
@@ -6,7 +6,7 @@
 > **Audience:** Anyone writing docs.
 > **Outcome:** 📖 Consistent, discoverable, maintainable documentation.
 
-**Scope:** This documentation covers FreeCRM patterns and conventions. While housed in FreeManager, these docs serve the entire FreeCRM ecosystem.
+**Scope:** This documentation covers FreeCRM patterns and conventions. These docs serve the entire FreeCRM ecosystem, including FreeGLBA and other derived projects.
 
 ---
 
@@ -23,16 +23,19 @@
 ## Folder Structure
 
 ```
-<project>/
-├── docs/
+FreeGLBA/
+├── Docs/
 │   ├── 000_quickstart.md       # Getting started + AI commands
 │   ├── 001_roleplay.md         # Discussion + Planning modes
 │   ├── 002_docsguide.md        # Standards (this file)
 │   ├── 003_templates.md        # All templates
-│   ├── 004_feature_xyz.md      # Feature design
-│   ├── 005_meeting_abc.md      # Meeting notes
-│   └── ...
-├── docs/archive/               # Old docs (keep numbers)
+│   ├── 004_styleguide.md       # Code style guide
+│   ├── 005_style.md            # Additional style rules
+│   ├── 006_architecture.md     # Architecture docs
+│   ├── 007_patterns.md         # Design patterns
+│   ├── 008_components.md       # UI components
+│   └── FreeGLBA_*.md           # Project-specific docs
+├── Docs/archive/               # Old docs (keep numbers)
 └── README.md
 ```
 
@@ -53,8 +56,8 @@
 ### Get Next Number
 
 ```bash
-ls docs/*.md | sort -r | head -1
-# Shows 005_... → next is 006
+ls Docs/*.md | sort -r | head -1
+# Shows 008_... → next is 009
 ```
 
 ---
@@ -66,12 +69,13 @@ ls docs/*.md | sort -r | head -1
 | `quickstart` | Getting started | `000_quickstart.md` |
 | `guide` | How-to, standards | `001_roleplay.md` |
 | `templates` | Reusable templates | `003_templates.md` |
-| `feature` | Feature designs | `004_feature_auth.md` |
-| `meeting` | Discussion notes | `005_meeting_api.md` |
-| `decision` | ADRs | `006_decision_db.md` |
-| `runbook` | Ops procedures | `007_runbook_deploy.md` |
-| `postmortem` | Incident analysis | `008_postmortem_outage.md` |
-| `reference` | Technical details | `009_reference_arch.md` |
+| `styleguide` | Code conventions | `004_styleguide.md` |
+| `architecture` | System design | `006_architecture.md` |
+| `patterns` | Design patterns | `007_patterns.md` |
+| `components` | UI components | `008_components.md` |
+| `feature` | Feature designs | `009_feature_auth.md` |
+| `meeting` | Discussion notes | `010_meeting_api.md` |
+| `decision` | ADRs | `011_decision_db.md` |
 
 ---
 
@@ -140,7 +144,7 @@ Every doc ends with:
 ---
 
 *Created: YYYY-MM-DD*  
-*Maintained by: [Role]*
+*Maintained by: [Role/Team]*
 ```
 
 ---
@@ -167,7 +171,7 @@ If a doc grows too long, split it into focused pieces.
 - [ ] New config keys documented
 - [ ] New behavior has an example
 - [ ] ADR added for meaningful decisions
-- [ ] Runbook updated if ops changed
+- [ ] README updated if project structure changed
 
 ---
 
@@ -213,14 +217,14 @@ Available templates:
 
 ### Create a Doc
 
-1. Find next number: `ls docs/*.md | sort -r | head -1`
+1. Find next number: `ls Docs/*.md | sort -r | head -1`
 2. Create: `{NUM}_{category}_{topic}.md`
 3. Add header + content + footer
 4. Commit: `git commit -m "docs: add {NUM} {topic}"`
 
 ### Archive a Doc
 
-1. Move to `docs/archive/`
+1. Move to `Docs/archive/`
 2. Keep the number (no renumbering)
 3. Update cross-references
 
@@ -232,5 +236,5 @@ Available templates:
 
 ---
 
-*Created: `<DATE>`*  
-*Maintained by: [Quality]*
+*Created: 2025-01-01*  
+*Maintained by: WSU-EIT*
