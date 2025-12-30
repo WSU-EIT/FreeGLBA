@@ -109,4 +109,16 @@ public class GlbaController : ControllerBase
         var sources = await _da.GetSourceSystemsAsync();
         return Ok(sources);
     }
+
+    /// <summary>
+    /// Get top accessors (users who have accessed data) for the dashboard.
+    /// </summary>
+    [HttpGet("accessors/top")]
+    [Authorize]
+    public async Task<ActionResult<List<DataObjects.AccessorSummary>>> GetTopAccessors(
+        [FromQuery] int limit = 10)
+    {
+        var accessors = await _da.GetTopAccessorsAsync(Math.Min(limit, 50));
+        return Ok(accessors);
+    }
 }

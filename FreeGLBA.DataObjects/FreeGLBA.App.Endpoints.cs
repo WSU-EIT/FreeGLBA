@@ -88,6 +88,16 @@ public partial class DataObjects
             /// <summary>Delete ComplianceReport by ID</summary>
             public const string DeleteComplianceReport = "api/Data/DeleteComplianceReport";
 
+            // ============================================================
+            // ACCESSOR (USER WHO ACCESSED DATA) ENDPOINTS
+            // ============================================================
+
+            /// <summary>Get filtered list of Accessors (users who have accessed data)</summary>
+            public const string GetAccessors = "api/Data/GetAccessors";
+
+            /// <summary>Get top accessors for dashboard</summary>
+            public const string GetTopAccessors = "api/Data/GetTopAccessors";
+
         }
     }
 }

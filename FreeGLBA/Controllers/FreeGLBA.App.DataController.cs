@@ -168,5 +168,22 @@ public partial class DataController
 
     #endregion
 
+    #region Accessor Endpoints
+
+    /// <summary>Get filtered list of accessors (users who have accessed data).</summary>
+    [HttpPost("api/Data/GetAccessors")]
+    public async Task<ActionResult<DataObjects.AccessorFilterResult>> GetAccessors([FromBody] DataObjects.AccessorFilter filter)
+    {
+        return Ok(await da.GetAccessorsAsync(filter));
+    }
+
+    /// <summary>Get top accessors for dashboard.</summary>
+    [HttpGet("api/Data/GetTopAccessors")]
+    public async Task<ActionResult<List<DataObjects.AccessorSummary>>> GetTopAccessors([FromQuery] int limit = 10)
+    {
+        return Ok(await da.GetTopAccessorsAsync(limit));
+    }
+
+    #endregion
 
 }

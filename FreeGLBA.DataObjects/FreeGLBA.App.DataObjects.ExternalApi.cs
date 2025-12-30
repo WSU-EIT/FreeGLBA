@@ -86,8 +86,47 @@ public partial class DataObjects
         public long SubjectsThisWeek { get; set; }
         /// <summary>Subjects accessed this month.</summary>
         public long SubjectsThisMonth { get; set; }
+        /// <summary>Total unique accessors (users who have accessed data).</summary>
+        public long TotalAccessors { get; set; }
         public Dictionary<string, long> ByCategory { get; set; } = new();
         public Dictionary<string, long> ByAccessType { get; set; } = new();
+    }
+
+    /// <summary>Accessor (user who accessed data) summary for reporting.</summary>
+    public class AccessorSummary
+    {
+        public string UserId { get; set; } = string.Empty;
+        public string? UserName { get; set; }
+        public string? UserEmail { get; set; }
+        public string? UserDepartment { get; set; }
+        public int TotalAccesses { get; set; }
+        public int UniqueSubjectsAccessed { get; set; }
+        public int ExportCount { get; set; }
+        public int ViewCount { get; set; }
+        public DateTime FirstAccessAt { get; set; }
+        public DateTime LastAccessAt { get; set; }
+    }
+
+    /// <summary>Filter for accessor queries.</summary>
+    public class AccessorFilter
+    {
+        public string? Search { get; set; }
+        public string? Department { get; set; }
+        public string SortColumn { get; set; } = "TotalAccesses";
+        public bool SortDescending { get; set; } = true;
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 25;
+        public int Skip => (Page - 1) * PageSize;
+    }
+
+    /// <summary>Result of accessor query.</summary>
+    public class AccessorFilterResult
+    {
+        public List<AccessorSummary> Records { get; set; } = new();
+        public int TotalRecords { get; set; }
+        public int Page { get; set; }
+        public int PageSize { get; set; }
+        public int TotalPages => (int)Math.Ceiling((double)TotalRecords / PageSize);
     }
 }
 

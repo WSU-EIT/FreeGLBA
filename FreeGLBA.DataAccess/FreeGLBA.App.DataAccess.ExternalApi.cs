@@ -20,6 +20,12 @@ public partial interface IDataAccess
 
     /// <summary>Get recent events for dashboard feed.</summary>
     Task<List<DataObjects.AccessEvent>> GetRecentAccessEventsAsync(int limit = 50);
+
+    /// <summary>Get accessor (user) statistics with filtering and pagination.</summary>
+    Task<DataObjects.AccessorFilterResult> GetAccessorsAsync(DataObjects.AccessorFilter filter);
+
+    /// <summary>Get top accessors for dashboard display.</summary>
+    Task<List<DataObjects.AccessorSummary>> GetTopAccessorsAsync(int limit = 10);
 }
 
 public partial class DataAccess
@@ -285,6 +291,94 @@ public partial class DataAccess
         }
 
         await data.SaveChangesAsync();
+    }
+
+    /// <summary>Get accessor (user) statistics with filtering and pagination.</summary>
+    public async Task<DataObjects.AccessorFilterResult> GetAccessorsAsync(DataObjects.AccessorFilter filter)
+    {
+        // Group access events by UserId to get accessor stats
+        var query = data.AccessEvents
+            .AsNoTracking()
+            .GroupBy(x => x.UserId)
+            .Select(g => new DataObjects.AccessorSummary
+            {
+                UserId = g.Key,
+                UserName = g.OrderByDescending(x => x.AccessedAt).Select(x => x.UserName).FirstOrDefault(),
+                UserEmail = g.OrderByDescending(x => x.AccessedAt).Select(x => x.UserEmail).FirstOrDefault(),
+                UserDepartment = g.OrderByDescending(x => x.AccessedAt).Select(x => x.UserDepartment).FirstOrDefault(),
+                TotalAccesses = g.Count(),
+                UniqueSubjectsAccessed = g.Select(x => x.SubjectId).Distinct().Count(),
+                ExportCount = g.Count(x => x.AccessType == "Export" || x.AccessType == "Download"),
+                ViewCount = g.Count(x => x.AccessType == "View" || x.AccessType == "Query"),
+                FirstAccessAt = g.Min(x => x.AccessedAt),
+                LastAccessAt = g.Max(x => x.AccessedAt)
+            });
+
+        // Apply search filter
+        if (!string.IsNullOrWhiteSpace(filter.Search))
+        {
+            var search = filter.Search.ToLower();
+            query = query.Where(x => x.UserId.ToLower().Contains(search) ||
+                                     (x.UserName != null && x.UserName.ToLower().Contains(search)) ||
+                                     (x.UserEmail != null && x.UserEmail.ToLower().Contains(search)) ||
+                                     (x.UserDepartment != null && x.UserDepartment.ToLower().Contains(search)));
+        }
+
+        // Apply department filter
+        if (!string.IsNullOrWhiteSpace(filter.Department))
+        {
+            query = query.Where(x => x.UserDepartment == filter.Department);
+        }
+
+        var total = await query.CountAsync();
+
+        // Apply sorting
+        query = filter.SortColumn switch
+        {
+            "UserId" => filter.SortDescending ? query.OrderByDescending(x => x.UserId) : query.OrderBy(x => x.UserId),
+            "UserName" => filter.SortDescending ? query.OrderByDescending(x => x.UserName) : query.OrderBy(x => x.UserName),
+            "UserDepartment" => filter.SortDescending ? query.OrderByDescending(x => x.UserDepartment) : query.OrderBy(x => x.UserDepartment),
+            "TotalAccesses" => filter.SortDescending ? query.OrderByDescending(x => x.TotalAccesses) : query.OrderBy(x => x.TotalAccesses),
+            "UniqueSubjectsAccessed" => filter.SortDescending ? query.OrderByDescending(x => x.UniqueSubjectsAccessed) : query.OrderBy(x => x.UniqueSubjectsAccessed),
+            "ExportCount" => filter.SortDescending ? query.OrderByDescending(x => x.ExportCount) : query.OrderBy(x => x.ExportCount),
+            "LastAccessAt" => filter.SortDescending ? query.OrderByDescending(x => x.LastAccessAt) : query.OrderBy(x => x.LastAccessAt),
+            _ => query.OrderByDescending(x => x.TotalAccesses) // Default: most active first
+        };
+
+        // Apply pagination
+        var records = await query
+            .Skip((filter.Page - 1) * filter.PageSize)
+            .Take(filter.PageSize)
+            .ToListAsync();
+
+        return new DataObjects.AccessorFilterResult
+        {
+            Records = records,
+            TotalRecords = total,
+            Page = filter.Page,
+            PageSize = filter.PageSize
+        };
+    }
+
+    /// <summary>Get top accessors for dashboard display.</summary>
+    public async Task<List<DataObjects.AccessorSummary>> GetTopAccessorsAsync(int limit = 10)
+    {
+        return await data.AccessEvents
+            .AsNoTracking()
+            .GroupBy(x => x.UserId)
+            .Select(g => new DataObjects.AccessorSummary
+            {
+                UserId = g.Key,
+                UserName = g.OrderByDescending(x => x.AccessedAt).Select(x => x.UserName).FirstOrDefault(),
+                UserDepartment = g.OrderByDescending(x => x.AccessedAt).Select(x => x.UserDepartment).FirstOrDefault(),
+                TotalAccesses = g.Count(),
+                UniqueSubjectsAccessed = g.Select(x => x.SubjectId).Distinct().Count(),
+                ExportCount = g.Count(x => x.AccessType == "Export" || x.AccessType == "Download"),
+                LastAccessAt = g.Max(x => x.AccessedAt)
+            })
+            .OrderByDescending(x => x.TotalAccesses)
+            .Take(limit)
+            .ToListAsync();
     }
 
     #endregion

@@ -42,6 +42,16 @@ public static partial class Helpers
                 AppAdminOnly = false,
             });
 
+            // Accessors (Users who accessed data) - visible to all logged in users
+            output.Add(new DataObjects.MenuItem {
+                Title = "Accessors",
+                Icon = "fa-solid fa-user-shield",
+                PageNames = new List<string> { "accessors" },
+                SortOrder = 350,
+                url = Helpers.BuildUrl("Accessors"),
+                AppAdminOnly = false,
+            });
+
             // Data Subjects - visible to all logged in users
             output.Add(new DataObjects.MenuItem {
                 Title = "Data Subjects",

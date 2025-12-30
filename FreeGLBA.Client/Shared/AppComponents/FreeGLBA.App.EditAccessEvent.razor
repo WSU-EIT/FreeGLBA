@@ -17,10 +17,55 @@
                     <div class="text-center py-5"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>
                 } else {
                     @if (IsNew) {
+                        @* Test Data Generation Buttons *@
                         <div class="mb-3">
-                            <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="GenerateTestData" disabled="@(_sourcesystemList.Count == 0)">
-                                <i class="fa-solid fa-wand-magic-sparkles me-1"></i>Generate Test Data
-                            </button>
+                            <div class="btn-group flex-wrap" role="group">
+                                <div class="dropdown">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                                            data-bs-toggle="dropdown" disabled="@(_sourcesystemList.Count == 0)">
+                                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i>Generate Test Data
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><h6 class="dropdown-header">Single Subject</h6></li>
+                                        <li>
+                                            <button type="button" class="dropdown-item" @onclick="() => GenerateTestData(TestDataType.SingleNew)">
+                                                <i class="fa-solid fa-user-plus me-2 text-success"></i>New Subject
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button type="button" class="dropdown-item" @onclick="() => GenerateTestData(TestDataType.SingleExisting)" 
+                                                    disabled="@(_existingSubjects.Count == 0)">
+                                                <i class="fa-solid fa-user me-2 text-primary"></i>Existing Subject
+                                                @if (_existingSubjects.Count == 0) {
+                                                    <small class="text-muted">(none yet)</small>
+                                                }
+                                            </button>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><h6 class="dropdown-header">Bulk (2-10 Subjects)</h6></li>
+                                        <li>
+                                            <button type="button" class="dropdown-item" @onclick="() => GenerateTestData(TestDataType.BulkNew)">
+                                                <i class="fa-solid fa-users me-2 text-success"></i>New Subjects (Bulk)
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button type="button" class="dropdown-item" @onclick="() => GenerateTestData(TestDataType.BulkExisting)"
+                                                    disabled="@(_existingSubjects.Count < 2)">
+                                                <i class="fa-solid fa-users me-2 text-primary"></i>Existing Subjects (Bulk)
+                                                @if (_existingSubjects.Count < 2) {
+                                                    <small class="text-muted">(need 2+)</small>
+                                                }
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button type="button" class="dropdown-item" @onclick="() => GenerateTestData(TestDataType.BulkMixed)"
+                                                    disabled="@(_existingSubjects.Count == 0)">
+                                                <i class="fa-solid fa-user-group me-2 text-warning"></i>Mixed (New + Existing)
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
                             @if (_sourcesystemList.Count == 0) {
                                 <span class="text-muted small ms-2">Create a Source System first</span>
                             }
@@ -250,6 +295,15 @@
     [Parameter] public EventCallback<DataObjects.AccessEvent> OnSave { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
 
+    // Test data type enum
+    private enum TestDataType {
+        SingleNew,      // Single new random subject
+        SingleExisting, // Single existing subject from DB
+        BulkNew,        // 2-10 new random subjects
+        BulkExisting,   // 2-10 existing subjects from DB
+        BulkMixed       // Mix of new and existing subjects
+    }
+
     // Test data arrays
     private static readonly string[] _firstNames = { "James", "Mary", "John", "Patricia", "Robert", "Jennifer", "Michael", "Linda", "David", "Elizabeth", "William", "Barbara", "Richard", "Susan", "Joseph", "Jessica", "Thomas", "Sarah", "Charles", "Karen" };
     private static readonly string[] _lastNames = { "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin" };
@@ -277,6 +331,7 @@
     };
 
     private List<DataObjects.SourceSystem> _sourcesystemList = new();
+    private List<DataObjects.DataSubject> _existingSubjects = new(); // For test data generation
     private bool IsNew => Item.AccessEventId == default;
     private bool _loading = true;
     private bool _saving = false;
@@ -294,9 +349,16 @@
     private IEnumerable<(string Id, string Display)> _timezones => _timezoneList;
 
     protected override async Task OnInitializedAsync() {
+        // Load source systems
         var sourcesystemResult = await Helpers.GetOrPost<DataObjects.SourceSystemFilterResult>(
             DataObjects.Endpoints.FreeGLBA.GetSourceSystems, new DataObjects.SourceSystemFilter { PageSize = 1000 }) ?? new();
         _sourcesystemList = sourcesystemResult.Records;
+
+        // Load existing subjects for test data generation
+        var subjectsResult = await Helpers.GetOrPost<DataObjects.DataSubjectFilterResult>(
+            DataObjects.Endpoints.FreeGLBA.GetDataSubjects, new DataObjects.DataSubjectFilter { PageSize = 100 }) ?? new();
+        _existingSubjects = subjectsResult.Records;
+
         _loading = false;
     }
 
@@ -347,7 +409,17 @@
         }
     }
 
-    private void GenerateTestData() {
+    /// <summary>Generate a random new subject ID.</summary>
+    private string GenerateNewSubjectId() => $"S{_random.Next(10000000, 99999999)}";
+
+    /// <summary>Get a random existing subject ID from the database.</summary>
+    private string GetRandomExistingSubjectId() {
+        if (_existingSubjects.Count == 0) return GenerateNewSubjectId();
+        return _existingSubjects[_random.Next(_existingSubjects.Count)].ExternalId;
+    }
+
+    /// <summary>Generate test data based on the specified type.</summary>
+    private void GenerateTestData(TestDataType dataType) {
         if (_sourcesystemList.Count == 0) return;
 
         // Pick a random source system
@@ -364,16 +436,109 @@
         Item.UserEmail = $"{accessorFirst.ToLower()}.{accessorLast.ToLower()}@university.edu";
         Item.UserDepartment = _departments[_random.Next(_departments.Length)];
 
-        // Generate subject (student/person whose data was accessed) info
-        var subjectFirst = _firstNames[_random.Next(_firstNames.Length)];
-        var subjectLast = _lastNames[_random.Next(_lastNames.Length)];
-        var studentId = _random.Next(10000000, 99999999);
-        Item.SubjectId = $"S{studentId}";
-        Item.SubjectType = _subjectTypes[_random.Next(_subjectTypes.Length)];
+        // Handle subject generation based on type
+        switch (dataType) {
+            case TestDataType.SingleNew:
+                // Single new random subject
+                _bulkAccessMode = false;
+                Item.SubjectId = GenerateNewSubjectId();
+                Item.SubjectType = _subjectTypes[_random.Next(_subjectTypes.Length)];
+                Item.SubjectIds = "";
+                Item.SubjectCount = 1;
+                _bulkSubjectIdsText = "";
+                _parsedSubjectCount = 0;
+                break;
+
+            case TestDataType.SingleExisting:
+                // Single existing subject from database
+                _bulkAccessMode = false;
+                if (_existingSubjects.Count > 0) {
+                    var existing = _existingSubjects[_random.Next(_existingSubjects.Count)];
+                    Item.SubjectId = existing.ExternalId;
+                    Item.SubjectType = existing.SubjectType ?? "Student";
+                } else {
+                    Item.SubjectId = GenerateNewSubjectId();
+                    Item.SubjectType = "Student";
+                }
+                Item.SubjectIds = "";
+                Item.SubjectCount = 1;
+                _bulkSubjectIdsText = "";
+                _parsedSubjectCount = 0;
+                break;
+
+            case TestDataType.BulkNew:
+                // 2-10 new random subjects
+                _bulkAccessMode = true;
+                var newCount = _random.Next(2, 11); // 2 to 10 subjects
+                var newSubjects = Enumerable.Range(0, newCount)
+                    .Select(_ => GenerateNewSubjectId())
+                    .ToList();
+                Item.SubjectId = "BULK";
+                Item.SubjectType = _subjectTypes[_random.Next(_subjectTypes.Length)];
+                Item.SubjectIds = System.Text.Json.JsonSerializer.Serialize(newSubjects);
+                Item.SubjectCount = newCount;
+                _bulkSubjectIdsText = string.Join("\n", newSubjects);
+                _parsedSubjectCount = newCount;
+                break;
+
+            case TestDataType.BulkExisting:
+                // 2-10 existing subjects from database
+                _bulkAccessMode = true;
+                var existingCount = Math.Min(_random.Next(2, 11), _existingSubjects.Count);
+                var existingSubjects = _existingSubjects
+                    .OrderBy(_ => _random.Next())
+                    .Take(existingCount)
+                    .Select(s => s.ExternalId)
+                    .ToList();
+                Item.SubjectId = "BULK";
+                Item.SubjectType = "Student";
+                Item.SubjectIds = System.Text.Json.JsonSerializer.Serialize(existingSubjects);
+                Item.SubjectCount = existingCount;
+                _bulkSubjectIdsText = string.Join("\n", existingSubjects);
+                _parsedSubjectCount = existingCount;
+                break;
+
+            case TestDataType.BulkMixed:
+                // Mix of new and existing subjects (2-10 total)
+                _bulkAccessMode = true;
+                var totalCount = _random.Next(2, 11);
+                var existingToUse = Math.Min(_random.Next(1, totalCount), _existingSubjects.Count);
+                var newToCreate = totalCount - existingToUse;
+                
+                var mixedSubjects = new List<string>();
+                // Add existing subjects
+                mixedSubjects.AddRange(_existingSubjects
+                    .OrderBy(_ => _random.Next())
+                    .Take(existingToUse)
+                    .Select(s => s.ExternalId));
+                // Add new subjects
+                mixedSubjects.AddRange(Enumerable.Range(0, newToCreate)
+                    .Select(_ => GenerateNewSubjectId()));
+                // Shuffle the list
+                mixedSubjects = mixedSubjects.OrderBy(_ => _random.Next()).ToList();
+                
+                Item.SubjectId = "BULK";
+                Item.SubjectType = "Student";
+                Item.SubjectIds = System.Text.Json.JsonSerializer.Serialize(mixedSubjects);
+                Item.SubjectCount = mixedSubjects.Count;
+                _bulkSubjectIdsText = string.Join("\n", mixedSubjects);
+                _parsedSubjectCount = mixedSubjects.Count;
+                break;
+        }
 
         // Access details - use local time variables
-        _accessedAtLocal = DateTime.Now.AddMinutes(-_random.Next(0, 60)); // Within last hour
+        // Randomly pick a time in the last 7 days to create variety
+        var daysAgo = _random.Next(0, 8);
+        var hoursAgo = _random.Next(0, 24);
+        var minutesAgo = _random.Next(0, 60);
+        _accessedAtLocal = DateTime.Now.AddDays(-daysAgo).AddHours(-hoursAgo).AddMinutes(-minutesAgo);
+        
         Item.AccessType = _accessTypes[_random.Next(_accessTypes.Length)];
+        // For bulk access, prefer Export/Download types
+        if (_bulkAccessMode && _random.Next(10) > 3) {
+            Item.AccessType = _random.Next(2) == 0 ? "Export" : "Download";
+        }
+        
         Item.DataCategory = _dataCategories[_random.Next(_dataCategories.Length)];
         Item.Purpose = _purposes[_random.Next(_purposes.Length)];
         Item.IpAddress = $"10.{_random.Next(1, 255)}.{_random.Next(1, 255)}.{_random.Next(1, 255)}";
