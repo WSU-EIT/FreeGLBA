@@ -72,11 +72,70 @@ public class DataExportService
 ### Simplified Methods
 
 ```csharp
-// Log an export event
+// Log an export event (single subject)
 await client.LogExportAsync("jsmith", "S12345678", "Annual review");
 
-// Log a view event
+// Log a view event (single subject)
 await client.LogViewAsync("jsmith", "S12345678");
+```
+
+## Bulk Access (Multiple Subjects)
+
+For systems like Touchpoints that export data for many individuals at once, use the bulk access methods.
+Each subject is tracked individually in the Data Subjects table for audit purposes.
+
+### Bulk Export (CSV, Reports, etc.)
+
+```csharp
+// Export affecting hundreds of students
+var studentIds = new[] { "S10000001", "S10000002", "S10000003", /* ... */ };
+
+var response = await client.LogBulkExportAsync(
+    userId: "jsmith",
+    subjectIds: studentIds,
+    purpose: "Enrollment analysis report for Dean's office",
+    userName: "John Smith",
+    dataCategory: "Financial Aid",
+    agreementText: "I acknowledge this export contains GLBA-protected data..."
+);
+
+Console.WriteLine($"Export logged. {response.SubjectCount} subjects affected.");
+// Output: Export logged. 347 subjects affected.
+```
+
+### Bulk View (Search Results, Dashboards)
+
+```csharp
+// Search results displaying multiple students
+var searchResults = await SearchStudentsAsync(query);
+var studentIds = searchResults.Select(s => s.StudentId);
+
+await client.LogBulkViewAsync(
+    userId: "jsmith",
+    subjectIds: studentIds,
+    purpose: "Student search for enrollment verification"
+);
+```
+
+### Using GlbaEventRequest Directly
+
+```csharp
+var response = await client.LogAccessAsync(new GlbaEventRequest
+{
+    AccessedAt = DateTime.UtcNow,
+    UserId = "jsmith",
+    UserName = "John Smith",
+    SubjectIds = new List<string> { "S001", "S002", "S003", /* ... */ },
+    AccessType = "Export",
+    DataCategory = "Financial Records",
+    Purpose = "Quarterly compliance audit",
+    AgreementText = "I certify this data access is for legitimate business purposes..."
+});
+
+if (response.IsBulkAccess)
+{
+    Console.WriteLine($"Bulk export logged: {response.SubjectCount} subjects");
+}
 ```
 
 ### Try Pattern (No Exceptions)
@@ -92,7 +151,9 @@ else
 }
 ```
 
-### Batch Processing
+### Batch Processing (Multiple Events)
+
+For logging many separate events (not one event with multiple subjects):
 
 ```csharp
 var events = new List<GlbaEventRequest>

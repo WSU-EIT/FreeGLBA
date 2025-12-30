@@ -222,6 +222,8 @@ public partial class DataAccess
                 UserDepartment = x.UserDepartment,
                 SubjectId = x.SubjectId,
                 SubjectType = x.SubjectType,
+                SubjectIds = x.SubjectIds,
+                SubjectCount = x.SubjectCount,
                 DataCategory = x.DataCategory,
                 AccessType = x.AccessType,
                 Purpose = x.Purpose,
@@ -264,6 +266,8 @@ public partial class DataAccess
             UserDepartment = item.UserDepartment,
             SubjectId = item.SubjectId,
             SubjectType = item.SubjectType,
+            SubjectIds = item.SubjectIds,
+            SubjectCount = item.SubjectCount,
             DataCategory = item.DataCategory,
             AccessType = item.AccessType,
             Purpose = item.Purpose,
@@ -299,6 +303,8 @@ public partial class DataAccess
         item.UserDepartment = dto.UserDepartment ?? string.Empty;
         item.SubjectId = dto.SubjectId ?? string.Empty;
         item.SubjectType = dto.SubjectType ?? string.Empty;
+        item.SubjectIds = dto.SubjectIds ?? string.Empty;
+        item.SubjectCount = dto.SubjectCount > 0 ? dto.SubjectCount : 1;
         item.DataCategory = dto.DataCategory ?? string.Empty;
         item.AccessType = dto.AccessType ?? string.Empty;
         item.Purpose = dto.Purpose ?? string.Empty;
@@ -318,14 +324,30 @@ public partial class DataAccess
             }
         }
 
-        // Update DataSubject stats if SubjectId is provided
-        if (!string.IsNullOrEmpty(dto.SubjectId)) {
-            await UpdateDataSubjectStatsAsync(dto.SubjectId);
+        // Update DataSubject stats - handle both single and bulk access
+        if (isNew) {
+            // Parse SubjectIds if it's a bulk access
+            if (!string.IsNullOrEmpty(dto.SubjectIds)) {
+                try {
+                    var subjectIdList = System.Text.Json.JsonSerializer.Deserialize<List<string>>(dto.SubjectIds);
+                    if (subjectIdList?.Count > 0) {
+                        await UpdateDataSubjectStatsAsync(subjectIdList, dto.SubjectType);
+                    }
+                } catch {
+                    // If JSON parsing fails, fall back to single subject
+                    if (!string.IsNullOrEmpty(dto.SubjectId)) {
+                        await UpdateDataSubjectStatsAsync(dto.SubjectId, dto.SubjectType);
+                    }
+                }
+            } else if (!string.IsNullOrEmpty(dto.SubjectId) && dto.SubjectId != "BULK") {
+                await UpdateDataSubjectStatsAsync(dto.SubjectId, dto.SubjectType);
+            }
         }
         
         // Return updated DTO
         dto.AccessEventId = item.AccessEventId;
         dto.ReceivedAt = item.ReceivedAt;
+        dto.SubjectCount = item.SubjectCount;
         return dto;
     }
 

@@ -54,6 +54,27 @@ public interface IGlbaClient
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Logs a bulk data export event affecting multiple subjects (e.g., CSV export from Touchpoints).
+    /// Use this when exporting data that contains information about many individuals.
+    /// </summary>
+    /// <param name="userId">The ID of the user performing the export.</param>
+    /// <param name="subjectIds">The IDs of all data subjects included in the export.</param>
+    /// <param name="purpose">The business purpose/justification for the bulk export.</param>
+    /// <param name="userName">Optional display name of the user.</param>
+    /// <param name="dataCategory">Optional category of data being exported (e.g., "Financial Aid", "Payment History").</param>
+    /// <param name="agreementText">Optional copy of the GLBA notice the user acknowledged.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The response from the server including the count of subjects affected.</returns>
+    Task<GlbaEventResponse> LogBulkExportAsync(
+        string userId,
+        IEnumerable<string> subjectIds,
+        string purpose,
+        string? userName = null,
+        string? dataCategory = null,
+        string? agreementText = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Logs a data view event with simplified parameters.
     /// </summary>
     /// <param name="userId">The ID of the user viewing the data.</param>
@@ -64,6 +85,23 @@ public interface IGlbaClient
     Task<GlbaEventResponse> LogViewAsync(
         string userId,
         string subjectId,
+        string? userName = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Logs a bulk data view/query event affecting multiple subjects.
+    /// Use this when viewing search results or reports that display multiple individuals.
+    /// </summary>
+    /// <param name="userId">The ID of the user performing the query.</param>
+    /// <param name="subjectIds">The IDs of all data subjects displayed in the results.</param>
+    /// <param name="purpose">Optional business purpose for the query.</param>
+    /// <param name="userName">Optional display name of the user.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The response from the server including the count of subjects affected.</returns>
+    Task<GlbaEventResponse> LogBulkViewAsync(
+        string userId,
+        IEnumerable<string> subjectIds,
+        string? purpose = null,
         string? userName = null,
         CancellationToken cancellationToken = default);
 }

@@ -33,11 +33,27 @@ public partial class AccessEventItem
     [MaxLength(200)]
     public string UserDepartment { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Primary subject ID for single-subject access. For bulk access, this may contain
+    /// "BULK" or the first subject ID as a reference.
+    /// </summary>
     [MaxLength(200)]
     public string SubjectId { get; set; } = string.Empty;
 
     [MaxLength(50)]
     public string SubjectType { get; set; } = string.Empty;
+
+    /// <summary>
+    /// JSON array of all subject IDs when accessing multiple subjects (e.g., CSV export).
+    /// For bulk exports from systems like Touchpoints, this captures all affected individuals.
+    /// </summary>
+    public string SubjectIds { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Count of subjects accessed. For single access = 1, for bulk exports = count of SubjectIds.
+    /// Useful for quick reporting without parsing SubjectIds JSON.
+    /// </summary>
+    public int SubjectCount { get; set; } = 1;
 
     [MaxLength(100)]
     public string DataCategory { get; set; } = string.Empty;

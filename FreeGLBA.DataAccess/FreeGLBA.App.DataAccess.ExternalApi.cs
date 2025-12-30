@@ -58,6 +58,15 @@ public partial class DataAccess
             }
         }
 
+        // Handle bulk subjects - calculate count and serialize IDs
+        var subjectIdList = request.SubjectIds?.Where(s => !string.IsNullOrWhiteSpace(s)).Distinct().ToList();
+        var hasBulkSubjects = subjectIdList?.Count > 0;
+        var subjectCount = hasBulkSubjects ? subjectIdList!.Count : 1;
+        var subjectIdsJson = hasBulkSubjects ? System.Text.Json.JsonSerializer.Serialize(subjectIdList) : string.Empty;
+        var primarySubjectId = hasBulkSubjects 
+            ? (subjectIdList!.Count > 1 ? "BULK" : subjectIdList[0])
+            : request.SubjectId;
+
         // Create event record
         var evt = new EFModels.EFModels.AccessEventItem
         {
@@ -70,8 +79,10 @@ public partial class DataAccess
             UserName = request.UserName,
             UserEmail = request.UserEmail,
             UserDepartment = request.UserDepartment,
-            SubjectId = request.SubjectId,
+            SubjectId = primarySubjectId,
             SubjectType = request.SubjectType,
+            SubjectIds = subjectIdsJson,
+            SubjectCount = subjectCount,
             DataCategory = request.DataCategory,
             AccessType = request.AccessType,
             Purpose = request.Purpose,
@@ -86,17 +97,21 @@ public partial class DataAccess
 
         // Update LastEventReceivedAt on source system (works with all providers including InMemory)
         var sourceSystem = await data.SourceSystems.FindAsync(sourceSystemId);
-        if (sourceSystem != null)
-        {
+        if (sourceSystem != null) {
             sourceSystem.LastEventReceivedAt = DateTime.UtcNow;
             await data.SaveChangesAsync();
         }
 
-        // Update DataSubject stats
-        await UpdateDataSubjectStatsAsync(request.SubjectId);
+        // Update DataSubject stats - handle bulk or single
+        if (hasBulkSubjects) {
+            await UpdateDataSubjectStatsAsync(subjectIdList!, request.SubjectType);
+        } else if (!string.IsNullOrEmpty(request.SubjectId)) {
+            await UpdateDataSubjectStatsAsync(request.SubjectId, request.SubjectType);
+        }
 
         response.EventId = evt.AccessEventId;
         response.Status = "accepted";
+        response.SubjectCount = subjectCount;
         return response;
     }
 
@@ -176,8 +191,10 @@ public partial class DataAccess
     }
 
     /// <summary>Update or create DataSubject stats on event.</summary>
-    private async Task UpdateDataSubjectStatsAsync(string subjectId)
+    private async Task UpdateDataSubjectStatsAsync(string subjectId, string? subjectType = null)
     {
+        if (string.IsNullOrWhiteSpace(subjectId)) return;
+
         var subject = await data.DataSubjects
             .FirstOrDefaultAsync(x => x.ExternalId == subjectId);
 
@@ -186,14 +203,61 @@ public partial class DataAccess
             {
                 DataSubjectId = Guid.NewGuid(),
                 ExternalId = subjectId,
+                SubjectType = subjectType ?? "Student",
                 FirstAccessedAt = DateTime.UtcNow,
-                TotalAccessCount = 0
+                LastAccessedAt = DateTime.UtcNow,
+                TotalAccessCount = 1,
+                UniqueAccessorCount = 1
             };
             data.DataSubjects.Add(subject);
+        } else {
+            subject.LastAccessedAt = DateTime.UtcNow;
+            subject.TotalAccessCount++;
+            // Update SubjectType if provided and currently empty
+            if (!string.IsNullOrEmpty(subjectType) && string.IsNullOrEmpty(subject.SubjectType)) {
+                subject.SubjectType = subjectType;
+            }
         }
 
-        subject.LastAccessedAt = DateTime.UtcNow;
-        subject.TotalAccessCount++;
+        await data.SaveChangesAsync();
+    }
+
+    /// <summary>Update or create DataSubject stats for multiple subjects (bulk access).</summary>
+    private async Task UpdateDataSubjectStatsAsync(IEnumerable<string> subjectIds, string? subjectType = null)
+    {
+        if (subjectIds == null) return;
+
+        var distinctIds = subjectIds.Where(s => !string.IsNullOrWhiteSpace(s)).Distinct().ToList();
+        if (distinctIds.Count == 0) return;
+
+        // Get existing subjects
+        var existingSubjects = await data.DataSubjects
+            .Where(x => distinctIds.Contains(x.ExternalId))
+            .ToDictionaryAsync(x => x.ExternalId);
+
+        foreach (var subjectId in distinctIds) {
+            if (existingSubjects.TryGetValue(subjectId, out var subject)) {
+                subject.LastAccessedAt = DateTime.UtcNow;
+                subject.TotalAccessCount++;
+                if (!string.IsNullOrEmpty(subjectType) && string.IsNullOrEmpty(subject.SubjectType)) {
+                    subject.SubjectType = subjectType;
+                }
+            } else {
+                var newSubject = new EFModels.EFModels.DataSubjectItem
+                {
+                    DataSubjectId = Guid.NewGuid(),
+                    ExternalId = subjectId,
+                    SubjectType = subjectType ?? "Student",
+                    FirstAccessedAt = DateTime.UtcNow,
+                    LastAccessedAt = DateTime.UtcNow,
+                    TotalAccessCount = 1,
+                    UniqueAccessorCount = 1
+                };
+                data.DataSubjects.Add(newSubject);
+            }
+        }
+
+        await data.SaveChangesAsync();
     }
 
     #endregion

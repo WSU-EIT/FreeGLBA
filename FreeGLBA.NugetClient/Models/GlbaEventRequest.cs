@@ -47,7 +47,8 @@ public class GlbaEventRequest
 
     /// <summary>
     /// The identifier of the data subject (e.g., student ID, customer ID).
-    /// Required.
+    /// For single-subject access, set this to the subject ID.
+    /// For bulk access (e.g., CSV exports), use SubjectIds instead and leave this empty or set to "BULK".
     /// </summary>
     [JsonPropertyName("subjectId")]
     public string SubjectId { get; set; } = string.Empty;
@@ -57,6 +58,14 @@ public class GlbaEventRequest
     /// </summary>
     [JsonPropertyName("subjectType")]
     public string? SubjectType { get; set; }
+
+    /// <summary>
+    /// List of subject IDs for bulk access (e.g., CSV export containing hundreds of students).
+    /// When provided, each subject will be tracked in the Data Subjects table for audit purposes.
+    /// Use this for exports from systems like Touchpoints that may contain many individuals.
+    /// </summary>
+    [JsonPropertyName("subjectIds")]
+    public List<string>? SubjectIds { get; set; }
 
     /// <summary>
     /// The category of data accessed (e.g., "Financial", "Academic", "Personal").

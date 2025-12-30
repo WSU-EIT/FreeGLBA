@@ -34,6 +34,13 @@ public class GlbaEventResponse
     public string? Message { get; set; }
 
     /// <summary>
+    /// Number of data subjects affected by this event.
+    /// For single-subject access this is 1, for bulk exports this is the count of SubjectIds.
+    /// </summary>
+    [JsonPropertyName("subjectCount")]
+    public int SubjectCount { get; set; } = 1;
+
+    /// <summary>
     /// Returns true if the event was accepted successfully.
     /// </summary>
     [JsonIgnore]
@@ -44,6 +51,12 @@ public class GlbaEventResponse
     /// </summary>
     [JsonIgnore]
     public bool IsDuplicate => Status == "duplicate";
+
+    /// <summary>
+    /// Returns true if this was a bulk access event (multiple subjects).
+    /// </summary>
+    [JsonIgnore]
+    public bool IsBulkAccess => SubjectCount > 1;
 }
 
 /// <summary>

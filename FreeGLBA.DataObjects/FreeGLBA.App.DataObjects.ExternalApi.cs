@@ -17,8 +17,18 @@ public partial class DataObjects
         public string? UserName { get; set; }
         public string? UserEmail { get; set; }
         public string? UserDepartment { get; set; }
+        /// <summary>
+        /// Subject ID for single-subject access. For bulk access, use SubjectIds instead
+        /// and set this to "BULK" or leave empty.
+        /// </summary>
         public string SubjectId { get; set; } = string.Empty;
         public string? SubjectType { get; set; }
+        /// <summary>
+        /// List of subject IDs for bulk access (e.g., CSV export containing hundreds of students).
+        /// When provided, SubjectCount will be set automatically. Each subject will be tracked
+        /// in the Data Subjects table for audit purposes.
+        /// </summary>
+        public List<string>? SubjectIds { get; set; }
         public string? DataCategory { get; set; }
         public string AccessType { get; set; } = string.Empty;
         public string? Purpose { get; set; }
@@ -42,6 +52,8 @@ public partial class DataObjects
         public DateTime ReceivedAt { get; set; } = DateTime.UtcNow;
         public string Status { get; set; } = string.Empty; // accepted, duplicate, error
         public string? Message { get; set; }
+        /// <summary>Number of data subjects affected by this event.</summary>
+        public int SubjectCount { get; set; }
     }
 
     /// <summary>Response after processing a batch of events.</summary>

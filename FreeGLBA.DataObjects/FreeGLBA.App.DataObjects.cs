@@ -61,9 +61,13 @@ public partial class DataObjects
         public string UserName { get; set; } = string.Empty;
         public string UserEmail { get; set; } = string.Empty;
         public string UserDepartment { get; set; } = string.Empty;
-        /// <summary>Student/employee ID</summary>
+        /// <summary>Primary subject ID (for single-subject access) or "BULK" for multi-subject.</summary>
         public string SubjectId { get; set; } = string.Empty;
         public string SubjectType { get; set; } = string.Empty;
+        /// <summary>JSON array of all subject IDs for bulk access (e.g., CSV exports).</summary>
+        public string SubjectIds { get; set; } = string.Empty;
+        /// <summary>Count of subjects accessed. 1 for single, N for bulk exports.</summary>
+        public int SubjectCount { get; set; } = 1;
         public string DataCategory { get; set; } = string.Empty;
         public string AccessType { get; set; } = string.Empty;
         public string Purpose { get; set; } = string.Empty;

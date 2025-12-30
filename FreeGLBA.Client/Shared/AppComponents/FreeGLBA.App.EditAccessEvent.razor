@@ -93,25 +93,69 @@
                         </div>
 
                         <h6 class="text-muted mb-3">Subject Information (Whose Data Was Accessed)</h6>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Subject ID <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @Helpers.MissingValue(Item.SubjectId)" @bind="Item.SubjectId" placeholder="ID of person whose data was accessed" />
+                        
+                        @* Bulk vs Single Access Toggle *@
+                        <div class="mb-3">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="accessMode" id="singleAccess" 
+                                       checked="@(!_bulkAccessMode)" @onchange="() => SetAccessMode(false)" />
+                                <label class="form-check-label" for="singleAccess">Single Subject</label>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Subject Type</label>
-                                <input type="text" class="form-control" list="subjectTypeList" @bind="Item.SubjectType" placeholder="e.g., Student, Employee" />
-                                <datalist id="subjectTypeList">
-                                    <option value="Student" />
-                                    <option value="Employee" />
-                                    <option value="Customer" />
-                                    <option value="Applicant" />
-                                    <option value="Vendor" />
-                                    <option value="Patient" />
-                                    <option value="Member" />
-                                </datalist>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="accessMode" id="bulkAccess" 
+                                       checked="@_bulkAccessMode" @onchange="() => SetAccessMode(true)" />
+                                <label class="form-check-label" for="bulkAccess">Bulk Access (CSV Export, etc.)</label>
                             </div>
                         </div>
+
+                        @if (!_bulkAccessMode) {
+                            @* Single Subject Mode *@
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Subject ID <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control @Helpers.MissingValue(Item.SubjectId)" @bind="Item.SubjectId" placeholder="ID of person whose data was accessed" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Subject Type</label>
+                                    <input type="text" class="form-control" list="subjectTypeList" @bind="Item.SubjectType" placeholder="e.g., Student, Employee" />
+                                    <datalist id="subjectTypeList">
+                                        <option value="Student" />
+                                        <option value="Employee" />
+                                        <option value="Customer" />
+                                        <option value="Applicant" />
+                                        <option value="Vendor" />
+                                        <option value="Patient" />
+                                        <option value="Member" />
+                                    </datalist>
+                                </div>
+                            </div>
+                        } else {
+                            @* Bulk Access Mode *@
+                            <div class="alert alert-info py-2 mb-3">
+                                <i class="fa-solid fa-info-circle me-1"></i>
+                                <strong>Bulk Access:</strong> Enter subject IDs separated by commas, spaces, or newlines. 
+                                Each subject will be tracked individually in the Data Subjects table.
+                            </div>
+                            <div class="row">
+                                <div class="col-md-8 mb-3">
+                                    <label class="form-label">Subject IDs <span class="text-danger">*</span> <span class="badge bg-secondary">@_parsedSubjectCount subjects</span></label>
+                                    <textarea class="form-control font-monospace" rows="4" @bind="_bulkSubjectIdsText" @bind:event="oninput" @bind:after="ParseBulkSubjectIds"
+                                              placeholder="S12345678&#10;S23456789&#10;S34567890&#10;...or paste comma-separated: S12345678, S23456789, S34567890"></textarea>
+                                    <div class="form-text">Paste subject IDs from your export. Duplicates will be removed automatically.</div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Subject Type</label>
+                                    <input type="text" class="form-control" list="subjectTypeList" @bind="Item.SubjectType" placeholder="e.g., Student" />
+                                    <datalist id="subjectTypeList">
+                                        <option value="Student" />
+                                        <option value="Employee" />
+                                        <option value="Customer" />
+                                        <option value="Applicant" />
+                                    </datalist>
+                                </div>
+                            </div>
+                        }
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Data Category</label>
@@ -213,6 +257,10 @@
     private bool _loading = true;
     private bool _saving = false;
 
+    private bool _bulkAccessMode = false;
+    private string _bulkSubjectIdsText = "";
+    private int _parsedSubjectCount = 0;
+
     protected override async Task OnInitializedAsync() {
         var sourcesystemResult = await Helpers.GetOrPost<DataObjects.SourceSystemFilterResult>(
             DataObjects.Endpoints.FreeGLBA.GetSourceSystems, new DataObjects.SourceSystemFilter { PageSize = 1000 }) ?? new();
@@ -271,35 +319,80 @@
         StateHasChanged();
     }
 
-    private async Task Save()
-    {
+    private void SetAccessMode(bool bulk) {
+        _bulkAccessMode = bulk;
+
+        if (!bulk) {
+            // Clear bulk data when switching to single mode
+            _bulkSubjectIdsText = "";
+            _parsedSubjectCount = 0;
+            Item.SubjectIds = "";
+            Item.SubjectCount = 1;
+        } else {
+            // Clear single subject when switching to bulk mode
+            Item.SubjectId = "";
+        }
+        StateHasChanged();
+    }
+
+    private void ParseBulkSubjectIds() {
+        // Split input by commas, spaces, tabs, or newlines, and trim each ID
+        var rawIds = _bulkSubjectIdsText
+            .Split(new[] { ',', ' ', '\t', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(id => id.Trim())
+            .Where(id => !string.IsNullOrEmpty(id))
+            .ToList();
+
+        // Remove duplicates
+        var uniqueIds = rawIds.Distinct().ToList();
+
+        _parsedSubjectCount = uniqueIds.Count;
+
+        if (_parsedSubjectCount > 0) {
+            // Store as JSON array in SubjectIds
+            Item.SubjectIds = System.Text.Json.JsonSerializer.Serialize(uniqueIds);
+            Item.SubjectCount = _parsedSubjectCount;
+            // Set SubjectId to "BULK" or first ID for display purposes
+            Item.SubjectId = _parsedSubjectCount > 1 ? "BULK" : uniqueIds[0];
+        } else {
+            Item.SubjectIds = "";
+            Item.SubjectCount = 1;
+            Item.SubjectId = "";
+        }
+    }
+
+    private async Task Save() {
         // Validation
         var errors = new List<string>();
         var focus = "";
 
-        if (Item.SourceSystemId == Guid.Empty)
-        {
+        if (Item.SourceSystemId == Guid.Empty) {
             errors.Add(Helpers.MissingRequiredField("Source System"));
             if (string.IsNullOrEmpty(focus)) focus = "edit-accessevent-SourceSystemId";
         }
-        if (string.IsNullOrWhiteSpace(Item.UserId))
-        {
+        if (string.IsNullOrWhiteSpace(Item.UserId)) {
             errors.Add(Helpers.MissingRequiredField("User ID"));
             if (string.IsNullOrEmpty(focus)) focus = "edit-accessevent-UserId";
         }
-        if (string.IsNullOrWhiteSpace(Item.SubjectId))
-        {
-            errors.Add(Helpers.MissingRequiredField("Subject ID"));
-            if (string.IsNullOrEmpty(focus)) focus = "edit-accessevent-SubjectId";
+        
+        // Validate subject - either single SubjectId or bulk SubjectIds
+        if (_bulkAccessMode) {
+            if (_parsedSubjectCount == 0) {
+                errors.Add(Helpers.MissingRequiredField("Subject IDs"));
+            }
+        } else {
+            if (string.IsNullOrWhiteSpace(Item.SubjectId)) {
+                errors.Add(Helpers.MissingRequiredField("Subject ID"));
+                if (string.IsNullOrEmpty(focus)) focus = "edit-accessevent-SubjectId";
+            }
         }
-        if (string.IsNullOrWhiteSpace(Item.AccessType))
-        {
+        
+        if (string.IsNullOrWhiteSpace(Item.AccessType)) {
             errors.Add(Helpers.MissingRequiredField("Access Type"));
             if (string.IsNullOrEmpty(focus)) focus = "edit-accessevent-AccessType";
         }
 
-        if (errors.Any())
-        {
+        if (errors.Any()) {
             Model.ErrorMessages(errors);
             await Helpers.DelayedFocus(focus);
             return;
@@ -309,23 +402,19 @@
         Model.Message_Saving();
         StateHasChanged();
 
-        try
-        {
+        try {
             await OnSave.InvokeAsync(Item);
             Model.ClearMessages();
-            Model.Message_Saved();
-        }
-        finally
-        {
+            var msg = _bulkAccessMode ? $"Event saved with {_parsedSubjectCount} subjects!" : "";
+            Model.Message_Saved(msg);
+        } finally {
             _saving = false;
             StateHasChanged();
         }
     }
 
-    private async Task Cancel()
-    {
-        if (!_saving)
-        {
+    private async Task Cancel() {
+        if (!_saving) {
             await OnCancel.InvokeAsync();
         }
     }

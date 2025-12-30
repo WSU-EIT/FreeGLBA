@@ -123,6 +123,37 @@ public class GlbaClient : IGlbaClient, IDisposable
     }
 
     /// <inheritdoc/>
+    public Task<GlbaEventResponse> LogBulkExportAsync(
+        string userId,
+        IEnumerable<string> subjectIds,
+        string purpose,
+        string? userName = null,
+        string? dataCategory = null,
+        string? agreementText = null,
+        CancellationToken cancellationToken = default)
+    {
+        var subjectList = subjectIds?.Where(s => !string.IsNullOrWhiteSpace(s)).Distinct().ToList()
+            ?? throw new ArgumentNullException(nameof(subjectIds));
+
+        if (subjectList.Count == 0)
+            throw new ArgumentException("At least one subject ID is required.", nameof(subjectIds));
+
+        return LogAccessAsync(new GlbaEventRequest
+        {
+            AccessedAt = DateTime.UtcNow,
+            UserId = userId,
+            UserName = userName,
+            SubjectId = subjectList.Count == 1 ? subjectList[0] : "BULK",
+            SubjectIds = subjectList,
+            AccessType = "Export",
+            DataCategory = dataCategory,
+            Purpose = purpose,
+            AgreementText = agreementText,
+            AgreementAcknowledgedAt = DateTime.UtcNow
+        }, cancellationToken);
+    }
+
+    /// <inheritdoc/>
     public Task<GlbaEventResponse> LogViewAsync(
         string userId,
         string subjectId,
@@ -136,6 +167,32 @@ public class GlbaClient : IGlbaClient, IDisposable
             UserName = userName,
             SubjectId = subjectId,
             AccessType = "View"
+        }, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<GlbaEventResponse> LogBulkViewAsync(
+        string userId,
+        IEnumerable<string> subjectIds,
+        string? purpose = null,
+        string? userName = null,
+        CancellationToken cancellationToken = default)
+    {
+        var subjectList = subjectIds?.Where(s => !string.IsNullOrWhiteSpace(s)).Distinct().ToList()
+            ?? throw new ArgumentNullException(nameof(subjectIds));
+
+        if (subjectList.Count == 0)
+            throw new ArgumentException("At least one subject ID is required.", nameof(subjectIds));
+
+        return LogAccessAsync(new GlbaEventRequest
+        {
+            AccessedAt = DateTime.UtcNow,
+            UserId = userId,
+            UserName = userName,
+            SubjectId = subjectList.Count == 1 ? subjectList[0] : "BULK",
+            SubjectIds = subjectList,
+            AccessType = "View",
+            Purpose = purpose
         }, cancellationToken);
     }
 

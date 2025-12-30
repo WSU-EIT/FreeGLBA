@@ -13,7 +13,7 @@
                     <i class="fa-solid fa-file-contract me-2"></i>Compliance Reports
                 </h1>
                 <button class="btn btn-primary" @onclick="CreateNew">
-                    <i class="fa-solid fa-plus me-1"></i>Generate Report
+                    <i class="fa-solid fa-plus me-1"></i>Custom Report
                 </button>
             </div>
         </div>
@@ -25,7 +25,7 @@
                     <span>
                         <i class="fa-solid fa-circle-info me-2 text-info"></i>
                         <strong>What are Compliance Reports?</strong>
-                        <span class="text-muted ms-2">— Official documentation of GLBA compliance activities for audits</span>
+                        <span class="text-muted ms-2">— Audit summaries for your Helpdesk/ticketing system</span>
                     </span>
                     <i class="fa-solid @(_helpExpanded ? "fa-chevron-up" : "fa-chevron-down") text-info"></i>
                 </div>
@@ -33,37 +33,83 @@
             @if (_helpExpanded) {
                 <div class="card-body py-2">
                     <div class="row">
-                        <div class="col-md-4">
-                            <h6 class="text-info"><i class="fa-solid fa-clipboard-check me-1"></i>In GLBA Terms</h6>
+                        <div class="col-md-3">
+                            <h6 class="text-info"><i class="fa-solid fa-clipboard-check me-1"></i>Purpose</h6>
                             <p class="small text-muted mb-0">
-                                GLBA requires institutions to maintain <strong>documented evidence</strong> of their information 
-                                security program. Compliance reports provide audit-ready summaries of access activities, 
-                                demonstrating that your institution monitors and controls access to protected financial data.
+                                Generate formatted <strong>compliance summaries</strong> that you copy/paste into your 
+                                Helpdesk or Jira ticketing system. Your compliance team then uses those tickets to 
+                                track and validate access reviews using your organization's standard tools.
                             </p>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <h6 class="text-info"><i class="fa-solid fa-list-ul me-1"></i>Report Types</h6>
                             <ul class="small text-muted mb-0 ps-3">
-                                <li><strong>Periodic Summary</strong> — Monthly/quarterly access statistics</li>
-                                <li><strong>User Activity</strong> — All access by a specific employee</li>
-                                <li><strong>Subject History</strong> — All access to a specific individual's data</li>
-                                <li><strong>Anomaly Report</strong> — Unusual access patterns flagged for review</li>
-                                <li><strong>Audit Response</strong> — Documentation for regulatory audits</li>
+                                <li><strong>Monthly/Quarterly</strong> — Routine summaries</li>
+                                <li><strong>Export Review</strong> — All data exports</li>
+                                <li><strong>High Volume</strong> — Unusual access patterns</li>
+                                <li><strong>Audit Response</strong> — For regulators</li>
+                                <li><strong>Subject Request</strong> — DSAR responses</li>
                             </ul>
                         </div>
-                        <div class="col-md-4">
-                            <h6 class="text-info"><i class="fa-solid fa-calendar-check me-1"></i>When to Generate</h6>
-                            <ul class="small text-muted mb-0 ps-3">
-                                <li>Monthly/quarterly for routine compliance</li>
-                                <li>Before internal or external audits</li>
-                                <li>Upon data subject access request (DSAR)</li>
-                                <li>After security incidents for investigation</li>
-                                <li>Annual reports for board/leadership review</li>
-                            </ul>
+                        <div class="col-md-3">
+                            <h6 class="text-info"><i class="fa-solid fa-arrows-rotate me-1"></i>Workflow</h6>
+                            <ol class="small text-muted mb-0 ps-3">
+                                <li>Generate report here</li>
+                                <li>Copy formatted summary</li>
+                                <li>Paste into Helpdesk/Jira</li>
+                                <li>Assign to reviewer</li>
+                                <li>Track completion there</li>
+                            </ol>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-info"><i class="fa-solid fa-lightbulb me-1"></i>Key Point</h6>
+                            <p class="small text-muted mb-0">
+                                This system <strong>logs events</strong> and <strong>generates reports</strong>. 
+                                Your Helpdesk/Jira system handles <strong>task assignment</strong> and 
+                                <strong>completion tracking</strong>. No duplicate workflow management needed!
+                            </p>
                         </div>
                     </div>
                 </div>
             }
+        </div>
+
+        @* Quick Report Generation Buttons *@
+        <div class="card shadow-sm mb-3 border-success">
+            <div class="card-header bg-success bg-opacity-10 py-2">
+                <i class="fa-solid fa-bolt me-2 text-success"></i>
+                <strong>Quick Reports</strong>
+                <span class="text-muted ms-2">— Generate common compliance reports with one click</span>
+            </div>
+            <div class="card-body py-3">
+                <div class="row g-2">
+                    <div class="col-auto">
+                        <button class="btn btn-outline-primary" @onclick="() => GenerateQuickReport_LastMonth()">
+                            <i class="fa-solid fa-calendar-day me-1"></i>Last Month
+                        </button>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-outline-primary" @onclick="() => GenerateQuickReport_LastQuarter()">
+                            <i class="fa-solid fa-calendar-week me-1"></i>Last Quarter
+                        </button>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-outline-primary" @onclick="() => GenerateQuickReport_YTD()">
+                            <i class="fa-solid fa-calendar me-1"></i>Year to Date
+                        </button>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-outline-warning" @onclick="() => GenerateQuickReport_ExportReview()">
+                            <i class="fa-solid fa-file-export me-1"></i>Export Review (Last 30 Days)
+                        </button>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-outline-danger" @onclick="() => GenerateQuickReport_HighVolume()">
+                            <i class="fa-solid fa-chart-line me-1"></i>High Volume (Last 30 Days)
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="card shadow-sm mb-3">
@@ -338,8 +384,11 @@
     private void CloseEdit() { _showEdit = false; }
 
     private async Task SaveItem(DataObjects.ComplianceReport item) {
-        await Helpers.GetOrPost<DataObjects.ComplianceReport>(DataObjects.Endpoints.FreeGLBA.SaveComplianceReport, item);
-        _showEdit = false;
+        var saved = await Helpers.GetOrPost<DataObjects.ComplianceReport>(DataObjects.Endpoints.FreeGLBA.SaveComplianceReport, item);
+        if (saved != null) {
+            // After saving, show the generated report so user can copy it
+            _editItem = saved;
+        }
         await LoadData();
     }
 
@@ -353,5 +402,63 @@
             _showDeleteConfirm = false;
             await LoadData();
         }
+    }
+
+    // Quick Report Generation Methods - Create and save reports with pre-configured periods
+    private async Task GenerateQuickReport_LastMonth() {
+        var now = DateTime.Now;
+        var start = new DateTime(now.Year, now.Month, 1).AddMonths(-1);
+        var end = start.AddMonths(1).AddDays(-1);
+        await GenerateAndSaveReport("Monthly", start, end);
+    }
+
+    private async Task GenerateQuickReport_LastQuarter() {
+        var now = DateTime.Now;
+        var currentQuarter = (now.Month - 1) / 3;
+        var lastQuarterStart = currentQuarter == 0 
+            ? new DateTime(now.Year - 1, 10, 1) 
+            : new DateTime(now.Year, (currentQuarter - 1) * 3 + 1, 1);
+        var lastQuarterEnd = lastQuarterStart.AddMonths(3).AddDays(-1);
+        await GenerateAndSaveReport("Quarterly", lastQuarterStart, lastQuarterEnd);
+    }
+
+    private async Task GenerateQuickReport_YTD() {
+        var now = DateTime.Now;
+        var start = new DateTime(now.Year, 1, 1);
+        await GenerateAndSaveReport("Annual", start, now.Date);
+    }
+
+    private async Task GenerateQuickReport_ExportReview() {
+        var now = DateTime.Now;
+        await GenerateAndSaveReport("Export Review", now.AddDays(-30).Date, now.Date);
+    }
+
+    private async Task GenerateQuickReport_HighVolume() {
+        var now = DateTime.Now;
+        await GenerateAndSaveReport("High Volume", now.AddDays(-30).Date, now.Date);
+    }
+
+    private async Task GenerateAndSaveReport(string reportType, DateTime periodStart, DateTime periodEnd) {
+        _loading = true;
+        StateHasChanged();
+
+        var newReport = new DataObjects.ComplianceReport {
+            ReportType = reportType,
+            PeriodStart = periodStart,
+            PeriodEnd = periodEnd
+        };
+
+        Model.Message_Saving($"Generating {reportType} report...");
+        
+        var saved = await Helpers.GetOrPost<DataObjects.ComplianceReport>(
+            DataObjects.Endpoints.FreeGLBA.SaveComplianceReport, newReport);
+        
+        if (saved != null) {
+            _editItem = saved;
+            _showEdit = true;
+            Model.Message_Saved($"{reportType} report generated! Copy the summary to your ticketing system.");
+        }
+
+        await LoadData();
     }
 }
