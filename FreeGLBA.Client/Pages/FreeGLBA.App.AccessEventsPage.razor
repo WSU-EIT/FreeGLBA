@@ -18,6 +18,62 @@
             </div>
         </div>
 
+        @* About Access Events - Collapsible Help *@
+        <div class="card shadow-sm mb-3 border-info">
+            <div class="card-header bg-info bg-opacity-10 cursor-pointer py-2" @onclick="() => _helpExpanded = !_helpExpanded">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="fa-solid fa-circle-info me-2 text-info"></i>
+                        <strong>What are Access Events?</strong>
+                        <span class="text-muted ms-2">— Records of who accessed protected financial data, when, and why</span>
+                    </span>
+                    <i class="fa-solid @(_helpExpanded ? "fa-chevron-up" : "fa-chevron-down") text-info"></i>
+                </div>
+            </div>
+            @if (_helpExpanded) {
+                <div class="card-body py-2">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <h6 class="text-info"><i class="fa-solid fa-scale-balanced me-1"></i>In GLBA Terms</h6>
+                            <p class="small text-muted mb-0">
+                                An <strong>Access Event</strong> records each instance when an employee or system accesses 
+                                a customer's nonpublic personal information (NPI). GLBA requires institutions to maintain 
+                                logs showing who accessed what data, when, and for what legitimate business purpose.
+                            </p>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-info"><i class="fa-solid fa-list-ul me-1"></i>Examples</h6>
+                            <ul class="small text-muted mb-0 ps-3">
+                                <li>Financial aid advisor views student's FAFSA data</li>
+                                <li>Bursar staff accesses account balance</li>
+                                <li>Registrar exports student financial records</li>
+                                <li>IT admin runs report on payment history</li>
+                                <li>Automated system processes loan disbursement</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-info"><i class="fa-solid fa-database me-1"></i>Key Fields</h6>
+                            <ul class="small text-muted mb-0 ps-3">
+                                <li><strong>User</strong> — Who accessed the data</li>
+                                <li><strong>Subject</strong> — Whose data was accessed</li>
+                                <li><strong>Access Type</strong> — View, export, modify</li>
+                                <li><strong>Purpose</strong> — Business reason</li>
+                                <li><strong>Data Category</strong> — Type of data</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-info"><i class="fa-solid fa-file-signature me-1"></i>Agreement Tracking</h6>
+                            <p class="small text-muted mb-0">
+                                Each event can include a copy of the <strong>privacy notice/agreement</strong> the user 
+                                acknowledged before accessing data. This documents exactly what disclosure was shown 
+                                at the time of access — critical for GLBA compliance audits.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
         <div class="card shadow-sm mb-3">
             <div class="card-body py-2">
                 <div class="row g-2 align-items-center">
@@ -222,6 +278,7 @@
     private DataObjects.AccessEvent _editItem = new();
     private bool _showDeleteConfirm = false;
     private DataObjects.AccessEvent? _deleteItem = null;
+    private bool _helpExpanded = false;
 
     public void Dispose() { Model.OnChange -= StateHasChanged; }
 

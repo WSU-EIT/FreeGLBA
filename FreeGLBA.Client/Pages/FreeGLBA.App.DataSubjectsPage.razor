@@ -18,6 +18,52 @@
             </div>
         </div>
 
+        @* About Data Subjects - Collapsible Help *@
+        <div class="card shadow-sm mb-3 border-info">
+            <div class="card-header bg-info bg-opacity-10 cursor-pointer py-2" @onclick="() => _helpExpanded = !_helpExpanded">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="fa-solid fa-circle-info me-2 text-info"></i>
+                        <strong>What are Data Subjects?</strong>
+                        <span class="text-muted ms-2">— Individuals whose protected financial information is being tracked</span>
+                    </span>
+                    <i class="fa-solid @(_helpExpanded ? "fa-chevron-up" : "fa-chevron-down") text-info"></i>
+                </div>
+            </div>
+            @if (_helpExpanded) {
+                <div class="card-body py-2">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6 class="text-info"><i class="fa-solid fa-user-shield me-1"></i>In GLBA Terms</h6>
+                            <p class="small text-muted mb-0">
+                                A <strong>Data Subject</strong> is any individual whose nonpublic personal information (NPI) 
+                                is held by your institution. Under GLBA, you must protect their financial data and be able 
+                                to report all access to their records upon request (e.g., for audits or data subject access requests).
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-info"><i class="fa-solid fa-list-ul me-1"></i>Examples</h6>
+                            <ul class="small text-muted mb-0 ps-3">
+                                <li>Students who applied for financial aid</li>
+                                <li>Students with tuition payment plans</li>
+                                <li>Alumni with outstanding balances</li>
+                                <li>Parents who provided financial info (PLUS loans)</li>
+                                <li>Employees with direct deposit/payroll data</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-info"><i class="fa-solid fa-gears me-1"></i>How It Works</h6>
+                            <p class="small text-muted mb-0">
+                                Data subjects are <strong>automatically created</strong> when access events reference them. 
+                                The system tracks statistics like total access count, unique accessors, and first/last access dates. 
+                                This enables quick auditing of all activity related to any individual.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
         <div class="card shadow-sm mb-3">
             <div class="card-body py-2">
                 <div class="row g-2 align-items-center">
@@ -210,6 +256,7 @@
     private DataObjects.DataSubject _editItem = new();
     private bool _showDeleteConfirm = false;
     private DataObjects.DataSubject? _deleteItem = null;
+    private bool _helpExpanded = false;
 
     public void Dispose() { Model.OnChange -= StateHasChanged; }
 

@@ -53,8 +53,18 @@ public partial class AccessEventItem
 
     public string AdditionalData { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Copy of the privacy notice/agreement text the user acknowledged when accessing data.
+    /// Captures what disclosure was shown at time of access for GLBA compliance.
+    /// </summary>
+    public string AgreementText { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Timestamp when the user acknowledged the privacy agreement (if different from AccessedAt).
+    /// </summary>
+    public DateTime? AgreementAcknowledgedAt { get; set; }
+
     // Navigation properties
     [ForeignKey("SourceSystemId")]
     public virtual SourceSystemItem SourceSystem { get; set; } = null!;
-
 }

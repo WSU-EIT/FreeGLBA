@@ -16,6 +16,16 @@
                 @if (_loading) {
                     <div class="text-center py-5"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>
                 } else {
+                    @if (IsNew) {
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="GenerateTestData" disabled="@(_sourcesystemList.Count == 0)">
+                                <i class="fa-solid fa-wand-magic-sparkles me-1"></i>Generate Test Data
+                            </button>
+                            @if (_sourcesystemList.Count == 0) {
+                                <span class="text-muted small ms-2">Create a Source System first</span>
+                            }
+                        </div>
+                    }
                     <EditForm Model="Item" OnValidSubmit="Save">
                         <DataAnnotationsValidator />
                         
@@ -136,8 +146,20 @@
                             <div class="form-text">Use this field for any system-specific data not covered above.</div>
                         </div>
 
-                        @if (!IsNew)
-                        {
+                        <hr />
+                        <h6 class="text-primary"><i class="fa-solid fa-file-signature me-1"></i>Privacy Agreement</h6>
+                        <div class="mb-3">
+                            <label class="form-label">Agreement Text</label>
+                            <textarea class="form-control" rows="3" @bind="Item.AgreementText" placeholder="Copy of the privacy notice/agreement shown to the user at time of access"></textarea>
+                            <div class="form-text">Capture the exact disclosure text the user acknowledged before accessing this data (required for GLBA compliance audits).</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Agreement Acknowledged At</label>
+                            <input type="datetime-local" class="form-control" @bind="Item.AgreementAcknowledgedAt" />
+                            <div class="form-text">When the user acknowledged the privacy agreement. Defaults to access time if not specified.</div>
+                        </div>
+
+                        @if (!IsNew) {
                             <hr />
                             <div class="row text-muted small">
                                 <div class="col-md-6">
@@ -171,6 +193,21 @@
     [Parameter] public EventCallback<DataObjects.AccessEvent> OnSave { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
 
+    // Test data arrays
+    private static readonly string[] _firstNames = { "James", "Mary", "John", "Patricia", "Robert", "Jennifer", "Michael", "Linda", "David", "Elizabeth", "William", "Barbara", "Richard", "Susan", "Joseph", "Jessica", "Thomas", "Sarah", "Charles", "Karen" };
+    private static readonly string[] _lastNames = { "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin" };
+    private static readonly string[] _departments = { "Financial Aid", "Bursar", "Registrar", "Admissions", "Student Accounts", "Academic Advising", "IT Services", "Business Office", "Enrollment Services", "Records" };
+    private static readonly string[] _accessTypes = { "View", "Export", "Print", "Query", "Download", "API Access" };
+    private static readonly string[] _dataCategories = { "Financial Aid", "Financial Records", "Tax Info", "Payment History", "Account Balance", "Loan Info", "Scholarship Data", "FAFSA Data", "Direct Deposit", "1098-T" };
+    private static readonly string[] _subjectTypes = { "Student", "Student", "Student", "Student", "Employee", "Applicant" }; // Weighted toward Student
+    private static readonly string[] _purposes = { "Enrollment verification", "Aid disbursement review", "Account inquiry", "Payment processing", "Audit request", "Student inquiry", "Compliance check", "Report generation", "Data verification", "Annual review" };
+    private static readonly string[] _agreementTemplates = {
+        "I acknowledge that I am accessing protected financial information in accordance with GLBA requirements and institutional policy. I will only use this data for legitimate business purposes.",
+        "By accessing this record, I confirm I have a valid business need and will protect this information per FERPA and GLBA regulations.",
+        "I certify that I require access to this financial data for official university business and will maintain confidentiality as required by federal law.",
+    };
+    private static readonly Random _random = new();
+
     private List<DataObjects.SourceSystem> _sourcesystemList = new();
     private bool IsNew => Item.AccessEventId == default;
     private bool _loading = true;
@@ -183,21 +220,55 @@
         _loading = false;
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender && !_loading)
-        {
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if (firstRender && !_loading) {
             await Helpers.DelayedFocus("edit-accessevent-SourceSystemId");
         }
     }
 
-    protected override void OnParametersSet()
-    {
+    protected override void OnParametersSet() {
         // Set defaults for new records
-        if (IsNew)
-        {
+        if (IsNew) {
             Item.AccessedAt = DateTime.Now;
         }
+    }
+
+    private void GenerateTestData() {
+        if (_sourcesystemList.Count == 0) return;
+
+        // Pick a random source system
+        var source = _sourcesystemList[_random.Next(_sourcesystemList.Count)];
+        Item.SourceSystemId = source.SourceSystemId;
+        Item.SourceEventId = $"EVT-{DateTime.Now:yyyyMMdd}-{_random.Next(10000, 99999)}";
+
+        // Generate accessor (employee) info
+        var accessorFirst = _firstNames[_random.Next(_firstNames.Length)];
+        var accessorLast = _lastNames[_random.Next(_lastNames.Length)];
+        var empId = _random.Next(100000, 999999);
+        Item.UserId = $"E{empId}";
+        Item.UserName = $"{accessorFirst} {accessorLast}";
+        Item.UserEmail = $"{accessorFirst.ToLower()}.{accessorLast.ToLower()}@university.edu";
+        Item.UserDepartment = _departments[_random.Next(_departments.Length)];
+
+        // Generate subject (student/person whose data was accessed) info
+        var subjectFirst = _firstNames[_random.Next(_firstNames.Length)];
+        var subjectLast = _lastNames[_random.Next(_lastNames.Length)];
+        var studentId = _random.Next(10000000, 99999999);
+        Item.SubjectId = $"S{studentId}";
+        Item.SubjectType = _subjectTypes[_random.Next(_subjectTypes.Length)];
+
+        // Access details
+        Item.AccessedAt = DateTime.Now.AddMinutes(-_random.Next(0, 60)); // Within last hour
+        Item.AccessType = _accessTypes[_random.Next(_accessTypes.Length)];
+        Item.DataCategory = _dataCategories[_random.Next(_dataCategories.Length)];
+        Item.Purpose = _purposes[_random.Next(_purposes.Length)];
+        Item.IpAddress = $"10.{_random.Next(1, 255)}.{_random.Next(1, 255)}.{_random.Next(1, 255)}";
+
+        // Agreement tracking
+        Item.AgreementText = _agreementTemplates[_random.Next(_agreementTemplates.Length)];
+        Item.AgreementAcknowledgedAt = Item.AccessedAt.AddSeconds(-_random.Next(5, 30)); // Acknowledged just before access
+
+        StateHasChanged();
     }
 
     private async Task Save()

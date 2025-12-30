@@ -18,6 +18,52 @@
             </div>
         </div>
 
+        @* About Source Systems - Collapsible Help *@
+        <div class="card shadow-sm mb-3 border-info">
+            <div class="card-header bg-info bg-opacity-10 cursor-pointer py-2" @onclick="() => _helpExpanded = !_helpExpanded">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="fa-solid fa-circle-info me-2 text-info"></i>
+                        <strong>What are Source Systems?</strong>
+                        <span class="text-muted ms-2">— Applications that send access data to this compliance tracker</span>
+                    </span>
+                    <i class="fa-solid @(_helpExpanded ? "fa-chevron-up" : "fa-chevron-down") text-info"></i>
+                </div>
+            </div>
+            @if (_helpExpanded) {
+                <div class="card-body py-2">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6 class="text-info"><i class="fa-solid fa-building me-1"></i>In GLBA Terms</h6>
+                            <p class="small text-muted mb-0">
+                                A <strong>Source System</strong> is any application, database, or service within your institution 
+                                that accesses protected financial information. Under GLBA, you must track all systems that 
+                                can view, modify, or transmit customer financial data.
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-info"><i class="fa-solid fa-list-ul me-1"></i>Examples</h6>
+                            <ul class="small text-muted mb-0 ps-3">
+                                <li>Student Information System (Banner, PeopleSoft)</li>
+                                <li>Financial Aid Processing System</li>
+                                <li>Bursar/Billing Applications</li>
+                                <li>Payment Processing Portals</li>
+                                <li>Data Warehouse/Reporting Tools</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-info"><i class="fa-solid fa-key me-1"></i>How It Works</h6>
+                            <p class="small text-muted mb-0">
+                                Each source system gets a unique <strong>API key</strong>. When users access financial data 
+                                in that system, the application sends an event to this tracker using its API key. This creates 
+                                an audit trail showing which system reported the access.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
         <div class="card shadow-sm mb-3">
             <div class="card-body py-2">
                 <div class="row g-2 align-items-center">
@@ -219,6 +265,7 @@
     private DataObjects.SourceSystem _editItem = new();
     private bool _showDeleteConfirm = false;
     private DataObjects.SourceSystem? _deleteItem = null;
+    private bool _helpExpanded = false;
 
     public void Dispose() { Model.OnChange -= StateHasChanged; }
 

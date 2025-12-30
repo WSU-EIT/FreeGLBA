@@ -227,6 +227,8 @@ public partial class DataAccess
                 Purpose = x.Purpose,
                 IpAddress = x.IpAddress,
                 AdditionalData = x.AdditionalData,
+                AgreementText = x.AgreementText,
+                AgreementAcknowledgedAt = x.AgreementAcknowledgedAt,
                 SourceSystemName = sourceSystemNames.GetValueOrDefault(x.SourceSystemId, string.Empty),
             }).ToList(),
             TotalRecords = total,
@@ -244,8 +246,7 @@ public partial class DataAccess
 
         // Get source system name separately
         string sourceSystemName = string.Empty;
-        if (item.SourceSystemId != default)
-        {
+        if (item.SourceSystemId != default) {
             var sourceSystem = await data.SourceSystems.FirstOrDefaultAsync(x => x.SourceSystemId == item.SourceSystemId);
             sourceSystemName = sourceSystem?.Name ?? string.Empty;
         }
@@ -268,6 +269,8 @@ public partial class DataAccess
             Purpose = item.Purpose,
             IpAddress = item.IpAddress,
             AdditionalData = item.AdditionalData,
+            AgreementText = item.AgreementText,
+            AgreementAcknowledgedAt = item.AgreementAcknowledgedAt,
             SourceSystemName = sourceSystemName,
         };
     }
@@ -301,6 +304,8 @@ public partial class DataAccess
         item.Purpose = dto.Purpose ?? string.Empty;
         item.IpAddress = dto.IpAddress ?? string.Empty;
         item.AdditionalData = dto.AdditionalData ?? string.Empty;
+        item.AgreementText = dto.AgreementText ?? string.Empty;
+        item.AgreementAcknowledgedAt = dto.AgreementAcknowledgedAt;
 
         await data.SaveChangesAsync();
 

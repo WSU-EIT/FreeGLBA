@@ -12,6 +12,13 @@
                 <button type="button" class="btn-close" @onclick="Cancel" disabled="@_saving"></button>
             </div>
             <div class="modal-body">
+                @if (IsNew) {
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="GenerateTestData">
+                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i>Generate Test Data
+                        </button>
+                    </div>
+                }
                 <EditForm Model="Item" OnValidSubmit="Save">
                     <DataAnnotationsValidator />
                     <div class="mb-3">
@@ -33,8 +40,7 @@
                         <div class="form-text">Inactive source systems cannot send events via API.</div>
                     </div>
 
-                    @if (!IsNew)
-                    {
+                    @if (!IsNew) {
                         <hr />
                         <h6 class="text-muted">API Key</h6>
                         <div class="mb-3">
@@ -98,6 +104,10 @@
     [Parameter] public EventCallback<DataObjects.SourceSystem> OnSave { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
 
+    private static readonly string[] _systemNames = { "Banner", "PeopleSoft", "Workday", "Ellucian", "Colleague", "PowerCampus", "Jenzabar", "TouchNet", "Nelnet", "CashNet", "Transact", "Blackbaud", "Slate", "Salesforce", "ServiceNow" };
+    private static readonly string[] _departments = { "Financial Aid", "Bursar", "Registrar", "IT Services", "Student Accounts", "Enrollment Services", "Business Office" };
+    private static readonly Random _random = new();
+
     private bool IsNew => Item.SourceSystemId == default;
     private bool _showApiKey = false;
     private bool _regenerateKey = false;
@@ -105,8 +115,7 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
+        if (firstRender) {
             await Helpers.DelayedFocus("edit-sourcesystem-Name");
         }
     }
@@ -114,10 +123,22 @@
     protected override void OnParametersSet()
     {
         // For new items, set IsActive to true by default
-        if (IsNew)
-        {
+        if (IsNew) {
             Item.IsActive = true;
         }
+    }
+
+    private void GenerateTestData()
+    {
+        var systemName = _systemNames[_random.Next(_systemNames.Length)];
+        var dept = _departments[_random.Next(_departments.Length)];
+        var suffix = _random.Next(100, 999);
+        
+        Item.Name = $"{systemName}-{suffix}";
+        Item.DisplayName = $"{systemName} {dept} Integration";
+        Item.ContactEmail = $"{systemName.ToLower()}-admin@university.edu";
+        Item.IsActive = true;
+        StateHasChanged();
     }
 
     private void ToggleApiKeyVisibility() => _showApiKey = !_showApiKey;
@@ -136,8 +157,7 @@
     private async Task Save()
     {
         // Validation
-        if (string.IsNullOrWhiteSpace(Item.Name))
-        {
+        if (string.IsNullOrWhiteSpace(Item.Name)) {
             Model.ErrorMessages(new List<string> { Helpers.MissingRequiredField("Name") });
             await Helpers.DelayedFocus("edit-sourcesystem-Name");
             return;
@@ -147,19 +167,15 @@
         Model.Message_Saving();
         StateHasChanged();
 
-        try
-        {
+        try {
             // Signal if we need to regenerate the API key
-            if (IsNew || _regenerateKey)
-            {
+            if (IsNew || _regenerateKey) {
                 Item.ApiKey = "REGENERATE"; // Special marker for the backend
             }
             await OnSave.InvokeAsync(Item);
             Model.ClearMessages();
             Model.Message_Saved();
-        }
-        finally
-        {
+        } finally {
             _saving = false;
             StateHasChanged();
         }

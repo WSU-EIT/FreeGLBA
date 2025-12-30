@@ -72,6 +72,10 @@ public partial class DataObjects
         public string AdditionalData { get; set; } = string.Empty;
         /// <summary>Display name for related SourceSystem.</summary>
         public string SourceSystemName { get; set; } = string.Empty;
+        /// <summary>Copy of the privacy notice/agreement text shown to user at time of access.</summary>
+        public string AgreementText { get; set; } = string.Empty;
+        /// <summary>When the user acknowledged the privacy agreement.</summary>
+        public DateTime? AgreementAcknowledgedAt { get; set; }
     }
 
     /// <summary>Filter criteria for AccessEvent queries.</summary>

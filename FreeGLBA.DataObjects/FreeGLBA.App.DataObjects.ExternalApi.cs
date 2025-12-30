@@ -24,6 +24,15 @@ public partial class DataObjects
         public string? Purpose { get; set; }
         public string? IpAddress { get; set; }
         public string? AdditionalData { get; set; }
+        /// <summary>
+        /// Copy of the privacy notice/agreement text shown to the user at time of access.
+        /// Include this to document what disclosure the user acknowledged before accessing data.
+        /// </summary>
+        public string? AgreementText { get; set; }
+        /// <summary>
+        /// When the user acknowledged the privacy agreement. Defaults to AccessedAt if not provided.
+        /// </summary>
+        public DateTime? AgreementAcknowledgedAt { get; set; }
     }
 
     /// <summary>Response after processing an event.</summary>

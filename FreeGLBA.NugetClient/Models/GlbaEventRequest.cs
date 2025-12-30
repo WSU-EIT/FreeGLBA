@@ -88,4 +88,19 @@ public class GlbaEventRequest
     /// </summary>
     [JsonPropertyName("additionalData")]
     public string? AdditionalData { get; set; }
+
+    /// <summary>
+    /// Copy of the privacy notice/agreement text shown to the user at time of access.
+    /// Include this to document what disclosure the user acknowledged before accessing data.
+    /// Critical for GLBA compliance audits.
+    /// </summary>
+    [JsonPropertyName("agreementText")]
+    public string? AgreementText { get; set; }
+
+    /// <summary>
+    /// When the user acknowledged the privacy agreement.
+    /// Defaults to AccessedAt if not provided.
+    /// </summary>
+    [JsonPropertyName("agreementAcknowledgedAt")]
+    public DateTime? AgreementAcknowledgedAt { get; set; }
 }

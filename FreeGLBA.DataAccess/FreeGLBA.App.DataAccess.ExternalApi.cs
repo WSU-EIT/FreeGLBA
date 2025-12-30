@@ -77,6 +77,8 @@ public partial class DataAccess
             Purpose = request.Purpose,
             IpAddress = request.IpAddress,
             AdditionalData = request.AdditionalData,
+            AgreementText = request.AgreementText,
+            AgreementAcknowledgedAt = request.AgreementAcknowledgedAt ?? request.AccessedAt,
         };
 
         data.AccessEvents.Add(evt);
