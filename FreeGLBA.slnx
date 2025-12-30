@@ -7,10 +7,12 @@
     <File Path="Remove Modules from FreeFreeGLBA.exe" />
     <File Path="Rename FreeFreeGLBA.exe" />
   </Folder>
-  <Project Path="FreeGLBA.DataAccess/FreeGLBA.DataAccess.csproj" Id="1151D3CB-CA9F-4FF7-B187-1FE77E474AD5" />
-  <Project Path="FreeGLBA.DataObjects/FreeGLBA.DataObjects.csproj" Id="2194DF46-FF60-45A3-9122-212157D74F97" />
-  <Project Path="FreeGLBA.EFModels/FreeGLBA.EFModels.csproj" Id="E430AD60-09A5-4D0C-B433-24A3921978CF" />
-  <Project Path="FreeGLBA.Plugins/FreeGLBA.Plugins.csproj" Id="AE71ECEB-CF8E-4567-87B4-632E45271A9C" />
+  <Project Path="Docs/Docs.csproj" Id="626fae91-42c9-4926-9167-59b9a7ebd85e" />
   <Project Path="FreeGLBA.Client/FreeGLBA.Client.csproj" />
+  <Project Path="FreeGLBA.DataAccess/FreeGLBA.DataAccess.csproj" Id="1151d3cb-ca9f-4ff7-b187-1fe77e474ad5" />
+  <Project Path="FreeGLBA.DataObjects/FreeGLBA.DataObjects.csproj" Id="2194df46-ff60-45a3-9122-212157d74f97" />
+  <Project Path="FreeGLBA.EFModels/FreeGLBA.EFModels.csproj" Id="e430ad60-09a5-4d0c-b433-24a3921978cf" />
+  <Project Path="FreeGLBA.NugetClient/FreeGLBA.NugetClient.csproj" Id="d4eb2b4c-a1c4-4fe0-815d-e876ae666d47" />
+  <Project Path="FreeGLBA.Plugins/FreeGLBA.Plugins.csproj" Id="ae71eceb-cf8e-4567-87b4-632e45271a9c" />
   <Project Path="FreeGLBA/FreeGLBA.csproj" />
 </Solution>
