@@ -2,6 +2,8 @@
 
 Documentation project for the FreeGLBA GLBA Compliance Data Access Tracking System. Contains guides, architecture documentation, and project plans.
 
+Developed by **Enrollment Information Technology** at **Washington State University**.
+
 ## Purpose
 
 This project serves as the central documentation repository:
@@ -94,6 +96,12 @@ When adding documentation:
 2. Use markdown formatting
 3. Include code examples where applicable
 4. Update this README with new files
+
+## About
+
+FreeGLBA is developed and maintained by the **Enrollment Information Technology** team at **Washington State University**.
+
+🔗 [Meet Our Staff](https://em.wsu.edu/eit/meet-our-staff/)
 
 ## Project Structure
 

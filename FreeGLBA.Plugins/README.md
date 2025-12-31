@@ -2,6 +2,8 @@
 
 Dynamic C# plugin system for the FreeGLBA GLBA Compliance Data Access Tracking System. Enables runtime code execution and extensibility without recompilation.
 
+Developed by **Enrollment Information Technology** at **Washington State University**.
+
 ## Purpose
 
 This project provides a plugin architecture that allows:
@@ -278,5 +280,9 @@ var authPlugins = _plugins.AllPlugins
 ## Related Projects
 
 - **FreeGLBA.DataAccess** - Uses plugins for extensibility
-- **FreeGLBA** - Hosts the /Plugins folder and loads plugins
-- **FreeGLBA.Client** - UI for managing and triggering plugins
+
+## About
+
+FreeGLBA is developed and maintained by the **Enrollment Information Technology** team at **Washington State University**.
+
+🔗 [Meet Our Staff](https://em.wsu.edu/eit/meet-our-staff/)

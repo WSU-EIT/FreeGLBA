@@ -2,6 +2,8 @@
 
 Blazor WebAssembly client application for the FreeGLBA GLBA Compliance Data Access Tracking System. Contains all UI components, pages, and client-side logic.
 
+Developed by **Enrollment Information Technology** at **Washington State University**.
+
 ## Purpose
 
 This project provides the interactive web UI for FreeGLBA:
@@ -176,27 +178,8 @@ protected override async Task OnInitializedAsync()
 
 *Note: WebAssembly required - IE11 not supported*
 
-## Development
+## About
 
-### Hot Reload
+FreeGLBA is developed and maintained by the **Enrollment Information Technology** team at **Washington State University**.
 
-During development, changes to `.razor` files trigger hot reload:
-
-```bash
-cd FreeGLBA
-dotnet watch run
-```
-
-### Standalone Testing
-
-The client can be tested standalone (with mock data):
-
-```bash
-cd FreeGLBA.Client
-dotnet run
-```
-
-## Related Projects
-
-- **FreeGLBA** - Server that hosts this client
-- **FreeGLBA.DataObjects** - DTOs and endpoints used by this client
+🔗 [Meet Our Staff](https://em.wsu.edu/eit/meet-our-staff/)

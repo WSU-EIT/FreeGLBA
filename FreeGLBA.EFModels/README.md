@@ -2,6 +2,8 @@
 
 Entity Framework Core models and database context for the FreeGLBA GLBA Compliance Data Access Tracking System.
 
+Developed by **Enrollment Information Technology** at **Washington State University**.
+
 ## Purpose
 
 This project contains all Entity Framework Core entity models and the `EFDataModel` database context that defines the database schema for FreeGLBA. It supports multiple database providers for maximum deployment flexibility.
@@ -199,8 +201,8 @@ public partial class AccessEventItem
 | `EFModels/PluginCache.cs` | Plugin cache entity |
 | `EFModelOverrides.cs` | Partial class extensions |
 
-## Related Projects
+## About
 
-- **FreeGLBA.DataAccess** - Data access layer that uses these models
-- **FreeGLBA.DataObjects** - DTOs and view models
-- **FreeGLBA** - Main server application
+**FreeGLBA** is developed and maintained by the **Enrollment Information Technology** team at **Washington State University**.
+
+🔗 [Meet Our Staff](https://em.wsu.edu/eit/meet-our-staff/)

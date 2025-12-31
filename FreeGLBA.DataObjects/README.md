@@ -2,6 +2,8 @@
 
 Data Transfer Objects (DTOs), view models, configuration helpers, and API endpoint constants for the FreeGLBA GLBA Compliance Data Access Tracking System.
 
+Developed by **Enrollment Information Technology** at **Washington State University**.
+
 ## Purpose
 
 This project contains all the data structures used to transfer data between layers of the application:
@@ -254,3 +256,11 @@ public async Task<List<SourceSystem>> GetSourceSystemsAsync()
 - **FreeGLBA.DataAccess** - Data access layer that creates/uses these DTOs
 - **FreeGLBA.Client** - Blazor UI that consumes these DTOs
 - **FreeGLBA.NugetClient** - External client library with matching DTOs
+
+---
+
+## About
+
+**FreeGLBA** is developed and maintained by the **Enrollment Information Technology** team at **Washington State University**.
+
+🔗 [Meet Our Team](https://em.wsu.edu/eit/meet-our-staff/) | 📦 [GitHub](https://github.com/WSU-EIT/FreeGLBA)

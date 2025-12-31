@@ -2,6 +2,8 @@
 
 A .NET 10 client library for integrating with [FreeGLBA](https://github.com/WSU-EIT/FreeGLBA) - a GLBA Compliance Data Access Tracking System.
 
+Developed by **Enrollment Information Technology** at **Washington State University**.
+
 ## Installation
 
 ```bash
@@ -391,6 +393,12 @@ You cannot overwrite an existing version on NuGet.org. Increment the version num
 - [FreeGLBA GitHub Repository](https://github.com/WSU-EIT/FreeGLBA)
 - [NuGet Package](https://www.nuget.org/packages/FreeGLBA.Client)
 - [Report Issues](https://github.com/WSU-EIT/FreeGLBA/issues)
+
+## About
+
+**FreeGLBA** is developed and maintained by the **Enrollment Information Technology** team at **Washington State University**.
+
+🔗 [Meet Our Team](https://em.wsu.edu/eit/meet-our-staff/)
 
 ## License
 

@@ -1,107 +1,101 @@
-﻿# FreeGLBA (Server Application)
+﻿# FreeGLBA
 
-Main server application for the FreeGLBA GLBA Compliance Data Access Tracking System. A Blazor Server application that hosts the web UI, APIs, and background services.
+**GLBA Compliance Data Access Tracking System**
 
-## Purpose
+A free, open-source solution for tracking and auditing access to protected financial information as required by the Gramm-Leach-Bliley Act (GLBA).
 
-This is the main executable project that:
-- **Hosts the Web UI** - Blazor Server interactive web application
-- **Provides REST APIs** - External API for source systems, internal API for UI
-- **Runs Background Services** - Scheduled tasks, cleanup, statistics
-- **Manages Authentication** - Local, AD, OAuth, and OIDC support
+## About
+
+FreeGLBA helps educational institutions and financial organizations maintain compliance with GLBA requirements by providing:
+
+- **Centralized Access Logging** - Track who accessed what data, when, and why
+- **Real-time Dashboard** - Monitor access patterns and statistics
+- **Compliance Reporting** - Generate audit-ready reports
+- **API Integration** - Easy integration with existing systems via REST API
+- **Bulk Access Tracking** - Track access to multiple subjects in a single event
 
 ## Technology Stack
 
 - **.NET 10** - Latest .NET runtime
 - **Blazor Server** - Interactive web UI with server-side rendering
-- **Entity Framework Core** - Database access
+- **Entity Framework Core** - Database access (SQL Server, PostgreSQL, SQLite)
 - **SignalR** - Real-time notifications
-- **Serilog** - Structured logging
 
-## Dependencies
+## Quick Start
 
-| Package | Purpose |
-|---------|---------|
-| `AspNet.Security.OAuth.Apple` | Apple Sign-In |
-| `Microsoft.AspNetCore.Authentication.*` | OAuth providers |
-| `Microsoft.AspNetCore.Authentication.OpenIdConnect` | Enterprise SSO |
-| `Microsoft.Azure.SignalR` | Azure SignalR Service |
-| `Serilog.Extensions.Logging.File` | File-based logging |
+### Prerequisites
+- .NET 10 SDK
+- SQL Server, PostgreSQL, or SQLite
 
-## Running the Application
-
-### Development
+### Running Locally
 
 ```bash
-cd FreeGLBA
+git clone https://github.com/WSU-EIT/FreeGLBA.git
+cd FreeGLBA/FreeGLBA
 dotnet run
 ```
 
 Navigate to `https://localhost:5001`
 
-### Production
+### Client Library
+
+For integrating your applications with FreeGLBA:
 
 ```bash
-dotnet publish -c Release -o publish
-# Deploy the publish folder to your server
+dotnet add package FreeGLBA.Client
 ```
 
-## Configuration
-
-### appsettings.json
-
-```json
+```csharp
+var client = new GlbaClient("https://your-server.com", "your-api-key");
+await client.LogAccessAsync(new GlbaEventRequest
 {
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=.;Database=FreeGLBA;Trusted_Connection=true;"
-  },
-  "DatabaseType": "SQLServer",
-  
-  "Authentication": {
-    "Google": { "ClientId": "", "ClientSecret": "" },
-    "Microsoft": { "ClientId": "", "ClientSecret": "" }
-  },
-  
-  "BackgroundService": {
-    "Enabled": true,
-    "IntervalSeconds": 60
-  }
-}
+    UserId = "jsmith",
+    SubjectId = "S12345678",
+    AccessType = "View",
+    Purpose = "Enrollment verification"
+});
 ```
 
-## Key Folders
+## Project Structure
 
-| Folder | Contents |
-|--------|----------|
-| `Components/` | Blazor components (App.razor, Routes.razor) |
-| `Controllers/` | API controllers |
-| `Middleware/` | Custom middleware (API key validation) |
-| `Plugins/` | Plugin files (.cs, .plugin) |
-| `wwwroot/` | Static files (CSS, JS, images) |
+| Project | Description |
+|---------|-------------|
+| `FreeGLBA` | Main server application (Blazor Server) |
+| `FreeGLBA.Client` | Blazor WebAssembly UI components |
+| `FreeGLBA.DataAccess` | Business logic and data access |
+| `FreeGLBA.DataObjects` | DTOs and shared models |
+| `FreeGLBA.EFModels` | Entity Framework database models |
+| `FreeGLBA.NugetClient` | Client library for API integration |
+| `FreeGLBA.Plugins` | Plugin system for extensibility |
+| `Docs` | Documentation |
 
-## API Endpoints
+## Documentation
 
-### External (API Key Auth)
-- `POST /api/glba/events` - Submit access event
-- `POST /api/glba/events/batch` - Submit batch
+- [Server Setup](Docs/README.md)
+- [Client Library](FreeGLBA.NugetClient/README.md)
+- [API Reference](FreeGLBA.DataObjects/README.md)
+- [Database Models](FreeGLBA.EFModels/README.md)
 
-### Internal (User Auth)
-- `GET /api/glba/stats/summary` - Dashboard stats
-- `GET /api/Data/GetSourceSystems` - List sources
-- `GET /api/Data/GetAccessEvents` - Query events
+## Contributing
 
-## Plugins
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-Place plugin files in the `/Plugins` folder:
-- `.cs` files compile with the solution
-- `.plugin` files load at runtime
+## License
 
-See [FreeGLBA.Plugins/README.md](../FreeGLBA.Plugins/README.md) for details.
+MIT License - see [LICENSE](LICENSE) for details.
 
-## Related Projects
+---
 
-- **FreeGLBA.Client** - Blazor WebAssembly UI
-- **FreeGLBA.DataAccess** - Business logic
-- **FreeGLBA.DataObjects** - DTOs
-- **FreeGLBA.EFModels** - Database entities
-- **FreeGLBA.Plugins** - Plugin system
+## About the Team
+
+**FreeGLBA** is developed and maintained by the **Enrollment Information Technology** team at **Washington State University**.
+
+We build software solutions to support enrollment management, student services, and compliance needs across the university.
+
+🔗 **Meet Our Team**: [https://em.wsu.edu/eit/meet-our-staff/](https://em.wsu.edu/eit/meet-our-staff/)
+
+📧 **Contact**: [GitHub Issues](https://github.com/WSU-EIT/FreeGLBA/issues)
+
+---
+
+*Go Cougs! 🐾*

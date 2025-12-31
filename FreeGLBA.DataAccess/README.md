@@ -2,6 +2,8 @@
 
 Data Access Layer for the FreeGLBA GLBA Compliance Data Access Tracking System. Contains all business logic, database operations, and external integrations.
 
+Developed by **Enrollment Information Technology** at **Washington State University**.
+
 ## Purpose
 
 This project serves as the central business logic layer, providing:
@@ -258,39 +260,9 @@ public class DashboardService
 | `FreeGLBA.App.DataAccess.ApiKey.cs` | API key generation and validation |
 | `DataAccess.Authenticate.cs` | User authentication logic |
 | `DataAccess.JWT.cs` | JWT token creation and validation |
-| `DataAccess.Encryption.cs` | AES encryption utilities |
-| `DataAccess.ActiveDirectory.cs` | LDAP/AD authentication |
-| `DataAccess.Users.cs` | User entity operations |
-| `DataAccess.UserGroups.cs` | User group operations |
-| `DataAccess.Departments.cs` | Department operations |
-| `DataAccess.Tenants.cs` | Multi-tenant operations |
-| `DataAccess.Settings.cs` | Settings CRUD |
-| `DataAccess.ApplicationSettings.cs` | App configuration management |
-| `DataAccess.Tags.cs` | Tagging system operations |
-| `DataAccess.UDFLabels.cs` | User-defined field operations |
-| `DataAccess.FileStorage.cs` | File storage operations |
-| `DataAccess.Language.cs` | Localization support |
-| `DataAccess.Ajax.cs` | AJAX response handling |
-| `DataAccess.SignalR.cs` | SignalR hub operations |
-| `DataAccess.CSharpCode.cs` | Dynamic C# code execution |
-| `DataAccess.Plugins.cs` | Plugin loading and execution |
-| `DataAccess.Migrations.cs` | Migration orchestration |
-| `DataMigrations.SQLServer.cs` | SQL Server schema migrations |
-| `DataMigrations.PostgreSQL.cs` | PostgreSQL schema migrations |
-| `DataMigrations.MySQL.cs` | MySQL schema migrations |
-| `DataMigrations.SQLite.cs` | SQLite schema migrations |
-| `DataAccess.SeedTestData.cs` | Test data seeding |
-| `GraphAPI.cs` | Microsoft Graph base operations |
-| `GraphAPI.App.cs` | Custom Graph operations |
-| `RandomPasswordGenerator.cs` | Secure password generation |
-| `RandomPasswordGenerator.App.cs` | Custom password rules |
-| `Utilities.cs` | General utility functions |
-| `Utilities.App.cs` | App-specific utilities |
-| `GlobalUsings.cs` | Global using statements |
 
-## Related Projects
+## About
 
-- **FreeGLBA.EFModels** - Entity Framework models used by this layer
-- **FreeGLBA.DataObjects** - DTOs returned by this layer
-- **FreeGLBA.Plugins** - Plugin system integrated here
-- **FreeGLBA** - Main server that uses this data access layer
+FreeGLBA is developed and maintained by the **Enrollment Information Technology** team at **Washington State University**.
+
+🔗 [Meet Our Staff](https://em.wsu.edu/eit/meet-our-staff/)
