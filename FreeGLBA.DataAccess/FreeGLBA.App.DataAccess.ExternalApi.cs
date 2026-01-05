@@ -21,6 +21,9 @@ public partial interface IDataAccess
     /// <summary>Get recent events for dashboard feed.</summary>
     Task<List<DataObjects.AccessEvent>> GetRecentAccessEventsAsync(int limit = 50);
 
+    /// <summary>Get access events for a specific subject by external ID.</summary>
+    Task<List<DataObjects.AccessEvent>> GetAccessEventsBySubjectAsync(string subjectId, int limit = 100);
+
     /// <summary>Get accessor (user) statistics with filtering and pagination.</summary>
     Task<DataObjects.AccessorFilterResult> GetAccessorsAsync(DataObjects.AccessorFilter filter);
 
@@ -41,12 +44,15 @@ public partial class DataAccess
             ReceivedAt = DateTime.UtcNow
         };
 
-        // Validation
-        if (string.IsNullOrWhiteSpace(request.SubjectId))
+        // Validation - SubjectId is optional for general audit logging
+        // If no SubjectId provided, use "SYSTEM" as a placeholder
+        var hasSubject = !string.IsNullOrWhiteSpace(request.SubjectId);
+        var hasBulkSubjects = request.SubjectIds?.Any(s => !string.IsNullOrWhiteSpace(s)) == true;
+        
+        if (!hasSubject && !hasBulkSubjects)
         {
-            response.Status = "error";
-            response.Message = "Missing required field: SubjectId";
-            return response;
+            // General audit log - no specific data subject
+            request.SubjectId = "SYSTEM";
         }
 
         // Deduplication check
@@ -66,8 +72,8 @@ public partial class DataAccess
 
         // Handle bulk subjects - calculate count and serialize IDs
         var subjectIdList = request.SubjectIds?.Where(s => !string.IsNullOrWhiteSpace(s)).Distinct().ToList();
-        var hasBulkSubjects = subjectIdList?.Count > 0;
-        var subjectCount = hasBulkSubjects ? subjectIdList!.Count : 1;
+        hasBulkSubjects = subjectIdList?.Count > 0;
+        var subjectCount = hasBulkSubjects ? subjectIdList!.Count : (hasSubject ? 1 : 0);
         var subjectIdsJson = hasBulkSubjects ? System.Text.Json.JsonSerializer.Serialize(subjectIdList) : string.Empty;
         var primarySubjectId = hasBulkSubjects 
             ? (subjectIdList!.Count > 1 ? "BULK" : subjectIdList[0])
@@ -83,28 +89,28 @@ public partial class DataAccess
                 : DateTime.SpecifyKind(request.AgreementAcknowledgedAt.Value, DateTimeKind.Utc))
             : accessedAtUtc;
 
-        // Create event record
+        // Create event record - ensure all strings are never null
         var evt = new EFModels.EFModels.AccessEventItem
         {
             AccessEventId = Guid.NewGuid(),
             SourceSystemId = sourceSystemId,
             ReceivedAt = DateTime.UtcNow,
-            SourceEventId = request.SourceEventId,
+            SourceEventId = (request.SourceEventId ?? string.Empty).Trim(),
             AccessedAt = accessedAtUtc,
-            UserId = request.UserId,
-            UserName = request.UserName,
-            UserEmail = request.UserEmail,
-            UserDepartment = request.UserDepartment,
-            SubjectId = primarySubjectId,
-            SubjectType = request.SubjectType,
-            SubjectIds = subjectIdsJson,
+            UserId = (request.UserId ?? string.Empty).Trim(),
+            UserName = (request.UserName ?? string.Empty).Trim(),
+            UserEmail = (request.UserEmail ?? string.Empty).Trim(),
+            UserDepartment = (request.UserDepartment ?? string.Empty).Trim(),
+            SubjectId = (primarySubjectId ?? string.Empty).Trim(),
+            SubjectType = (request.SubjectType ?? string.Empty).Trim(),
+            SubjectIds = subjectIdsJson ?? "[]",
             SubjectCount = subjectCount,
-            DataCategory = request.DataCategory,
-            AccessType = request.AccessType,
-            Purpose = request.Purpose,
-            IpAddress = request.IpAddress,
-            AdditionalData = request.AdditionalData,
-            AgreementText = request.AgreementText,
+            DataCategory = (request.DataCategory ?? string.Empty).Trim(),
+            AccessType = (request.AccessType ?? string.Empty).Trim(),
+            Purpose = (request.Purpose ?? string.Empty).Trim(),
+            IpAddress = (request.IpAddress ?? string.Empty).Trim(),
+            AdditionalData = string.IsNullOrWhiteSpace(request.AdditionalData) ? "{}" : request.AdditionalData.Trim(),
+            AgreementText = (request.AgreementText ?? string.Empty).Trim(),
             AgreementAcknowledgedAt = agreementAtUtc,
         };
 
@@ -119,9 +125,10 @@ public partial class DataAccess
         }
 
         // Update DataSubject stats - handle bulk or single
+        // Skip for SYSTEM subjects (general audit logs without a specific data subject)
         if (hasBulkSubjects) {
             await UpdateDataSubjectStatsAsync(subjectIdList!, request.SubjectType);
-        } else if (!string.IsNullOrEmpty(request.SubjectId)) {
+        } else if (hasSubject && request.SubjectId != "SYSTEM") {
             await UpdateDataSubjectStatsAsync(request.SubjectId, request.SubjectType);
         }
 
@@ -197,6 +204,40 @@ public partial class DataAccess
     public async Task<List<DataObjects.AccessEvent>> GetRecentAccessEventsAsync(int limit = 50)
     {
         return await data.AccessEvents
+            .OrderByDescending(x => x.AccessedAt)
+            .Take(limit)
+            .Select(x => new DataObjects.AccessEvent
+            {
+                AccessEventId = x.AccessEventId,
+                SourceSystemId = x.SourceSystemId,
+                SourceEventId = x.SourceEventId,
+                AccessedAt = x.AccessedAt,
+                ReceivedAt = x.ReceivedAt,
+                UserId = x.UserId,
+                UserName = x.UserName,
+                UserEmail = x.UserEmail,
+                UserDepartment = x.UserDepartment,
+                SubjectId = x.SubjectId,
+                SubjectType = x.SubjectType,
+                SubjectIds = x.SubjectIds,
+                SubjectCount = x.SubjectCount,
+                DataCategory = x.DataCategory,
+                AccessType = x.AccessType,
+                Purpose = x.Purpose,
+                IpAddress = x.IpAddress,
+                AdditionalData = x.AdditionalData,
+            })
+            .ToListAsync();
+    }
+
+    /// <summary>Get access events for a specific subject by external ID.</summary>
+    public async Task<List<DataObjects.AccessEvent>> GetAccessEventsBySubjectAsync(string subjectId, int limit = 100)
+    {
+        if (string.IsNullOrWhiteSpace(subjectId)) return new List<DataObjects.AccessEvent>();
+
+        // Search both direct SubjectId match AND in SubjectIds JSON array (for bulk events)
+        return await data.AccessEvents
+            .Where(x => x.SubjectId == subjectId || x.SubjectIds.Contains(subjectId))
             .OrderByDescending(x => x.AccessedAt)
             .Take(limit)
             .Select(x => new DataObjects.AccessEvent

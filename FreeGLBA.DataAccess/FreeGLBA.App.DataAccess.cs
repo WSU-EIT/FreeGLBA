@@ -93,6 +93,7 @@ public partial class DataAccess
     {
         EFModels.EFModels.SourceSystemItem item;
         var isNew = dto.SourceSystemId == default;
+        string? newPlaintextKey = null;
 
         if (isNew) {
             item = new EFModels.EFModels.SourceSystemItem();
@@ -111,7 +112,8 @@ public partial class DataAccess
 
         // Generate API key if new or if regeneration requested
         if (isNew || dto.ApiKey == "REGENERATE") {
-            item.ApiKey = GenerateApiKey();
+            newPlaintextKey = GenerateApiKey();
+            item.ApiKey = HashApiKey(newPlaintextKey); // Store the hash, not the plaintext
         }
 
         await data.SaveChangesAsync();
@@ -121,7 +123,8 @@ public partial class DataAccess
         
         // Return the updated DTO with the generated values
         dto.SourceSystemId = item.SourceSystemId;
-        dto.ApiKey = item.ApiKey;
+        dto.ApiKey = item.ApiKey; // This is the hash (for display masking)
+        dto.NewApiKey = newPlaintextKey; // This is the plaintext key (show ONCE to user)
         dto.EventCount = eventCount;
         dto.LastEventReceivedAt = item.LastEventReceivedAt;
         return dto;
@@ -133,7 +136,7 @@ public partial class DataAccess
     private string GenerateApiKey()
     {
         using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
-        var bytes = new byte[32];
+        var bytes = new byte[64]; // 64 bytes = 512 bits = equivalent to 4 GUIDs
         rng.GetBytes(bytes);
         return Convert.ToBase64String(bytes).Replace("+", "-").Replace("/", "_").TrimEnd('=');
     }

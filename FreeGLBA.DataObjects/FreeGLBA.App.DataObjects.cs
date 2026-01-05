@@ -16,8 +16,10 @@ public partial class DataObjects
         public Guid SourceSystemId { get; set; }
         public string Name { get; set; } = string.Empty;
         public string DisplayName { get; set; } = string.Empty;
-        /// <summary>Hashed API key</summary>
+        /// <summary>Hashed API key (stored in database)</summary>
         public string ApiKey { get; set; } = string.Empty;
+        /// <summary>Plaintext API key - only populated when newly generated. Show to user ONCE then discard.</summary>
+        public string? NewApiKey { get; set; }
         public string ContactEmail { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
         public DateTime? LastEventReceivedAt { get; set; }

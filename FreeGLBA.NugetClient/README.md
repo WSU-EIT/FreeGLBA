@@ -1,6 +1,6 @@
 ﻿# FreeGLBA.Client
 
-A .NET 10 client library for integrating with [FreeGLBA](https://github.com/WSU-EIT/FreeGLBA) - a GLBA Compliance Data Access Tracking System.
+A .NET client library for integrating with [FreeGLBA](https://github.com/WSU-EIT/FreeGLBA) - a GLBA Compliance Data Access Tracking System.
 
 Developed by **Enrollment Information Technology** at **Washington State University**.
 

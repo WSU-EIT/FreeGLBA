@@ -100,6 +100,30 @@ public class GlbaController : ControllerBase
     }
 
     /// <summary>
+    /// Get access events for a specific subject by external ID.
+    /// </summary>
+    [HttpGet("subjects/{subjectId}/events")]
+    [Authorize]
+    public async Task<ActionResult<List<DataObjects.AccessEvent>>> GetSubjectEvents(
+        string subjectId, [FromQuery] int limit = 100)
+    {
+        var events = await _da.GetAccessEventsBySubjectAsync(subjectId, Math.Min(limit, 500));
+        return Ok(events);
+    }
+
+    /// <summary>
+    /// Get a single access event by ID.
+    /// </summary>
+    [HttpGet("events/{eventId:guid}")]
+    [Authorize]
+    public async Task<ActionResult<DataObjects.AccessEvent>> GetEvent(Guid eventId)
+    {
+        var evt = await _da.GetAccessEventAsync(eventId);
+        if (evt == null) return NotFound();
+        return Ok(evt);
+    }
+
+    /// <summary>
     /// Get source system status for the dashboard.
     /// </summary>
     [HttpGet("sources/status")]

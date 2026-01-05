@@ -12,56 +12,70 @@
                 <button type="button" class="btn-close" @onclick="Cancel" disabled="@_saving"></button>
             </div>
             <div class="modal-body">
-                @if (IsNew) {
+                @* Show newly generated API key alert - this is the key users need to copy *@
+                @if (!string.IsNullOrEmpty(Item.NewApiKey)) {
+                    <div class="alert alert-success">
+                        <h5 class="alert-heading"><i class="fa-solid fa-key me-2"></i>New API Key Generated!</h5>
+                        <p class="mb-2"><strong>Copy this key now - it will not be shown again:</strong></p>
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control font-monospace bg-white" value="@Item.NewApiKey" readonly />
+                            <button type="button" class="btn btn-success" @onclick="CopyNewApiKey">
+                                <i class="fa-solid fa-copy me-1"></i>Copy
+                            </button>
+                        </div>
+                        <hr />
+                        <p class="mb-0 small">Use this key in the <code>Authorization: Bearer YOUR_API_KEY</code> header when sending events.</p>
+                    </div>
+                }
+
+                @if (IsNew && string.IsNullOrEmpty(Item.NewApiKey)) {
                     <div class="mb-3">
                         <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="GenerateTestData">
                             <i class="fa-solid fa-wand-magic-sparkles me-1"></i>Generate Test Data
                         </button>
                     </div>
                 }
+                
                 <EditForm Model="Item" OnValidSubmit="Save">
                     <DataAnnotationsValidator />
                     <div class="mb-3">
                         <label class="form-label">Name <span class="text-danger">*</span></label>
                         <input type="text" id="edit-sourcesystem-Name" class="form-control @Helpers.MissingValue(Item.Name)" 
-                               @bind="Item.Name" placeholder="e.g., Banner, PeopleSoft, etc." />
+                               @bind="Item.Name" placeholder="e.g., Banner, PeopleSoft, etc." disabled="@(!string.IsNullOrEmpty(Item.NewApiKey))" />
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Display Name</label>
-                        <input type="text" class="form-control" @bind="Item.DisplayName" placeholder="Friendly name for display" />
+                        <input type="text" class="form-control" @bind="Item.DisplayName" placeholder="Friendly name for display" disabled="@(!string.IsNullOrEmpty(Item.NewApiKey))" />
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Contact Email</label>
-                        <input type="email" class="form-control" @bind="Item.ContactEmail" placeholder="admin@example.com" />
+                        <input type="email" class="form-control" @bind="Item.ContactEmail" placeholder="admin@example.com" disabled="@(!string.IsNullOrEmpty(Item.NewApiKey))" />
                     </div>
                     <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="isActive" @bind="Item.IsActive" />
+                        <input type="checkbox" class="form-check-input" id="isActive" @bind="Item.IsActive" disabled="@(!string.IsNullOrEmpty(Item.NewApiKey))" />
                         <label class="form-check-label" for="isActive">Active</label>
                         <div class="form-text">Inactive source systems cannot send events via API.</div>
                     </div>
 
-                    @if (!IsNew) {
+                    @if (!IsNew && string.IsNullOrEmpty(Item.NewApiKey)) {
                         <hr />
                         <h6 class="text-muted">API Key</h6>
                         <div class="mb-3">
-                            <div class="input-group">
-                                <input type="@(_showApiKey ? "text" : "password")" class="form-control font-monospace" 
-                                       value="@Item.ApiKey" readonly />
-                                <button type="button" class="btn btn-outline-secondary" @onclick="ToggleApiKeyVisibility">
-                                    <i class="fa-solid @(_showApiKey ? "fa-eye-slash" : "fa-eye")"></i>
-                                </button>
-                                <button type="button" class="btn btn-outline-primary" @onclick="CopyApiKey" title="Copy to clipboard">
-                                    <i class="fa-solid fa-copy"></i>
-                                </button>
+                            <div class="alert alert-info py-2">
+                                <i class="fa-solid fa-info-circle me-2"></i>
+                                <small>The stored key is hashed for security. If you've lost your key, regenerate a new one.</small>
                             </div>
-                            <div class="form-text">Use this API key in the Authorization header when sending events.</div>
                         </div>
                         
                         <div class="mb-3">
-                            <button type="button" class="btn btn-warning btn-sm" @onclick="RegenerateApiKey" disabled="@_saving">
-                                <i class="fa-solid fa-rotate me-1"></i>Regenerate API Key
+                            <button type="button" class="btn btn-warning" @onclick="RegenerateApiKeyNow" disabled="@_saving">
+                                @if (_saving) {
+                                    <i class="fa-solid fa-spinner fa-spin me-1"></i><text>Regenerating...</text>
+                                } else {
+                                    <i class="fa-solid fa-rotate me-1"></i><text>Regenerate API Key</text>
+                                }
                             </button>
-                            <div class="form-text text-warning">Warning: Regenerating will invalidate the current key.</div>
+                            <div class="form-text text-warning">Warning: Regenerating will invalidate the current key immediately.</div>
                         </div>
 
                         <hr />
@@ -82,18 +96,24 @@
                 </EditForm>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" @onclick="Cancel" disabled="@_saving">
-                    @Helpers.ConfirmButtonTextCancel
-                </button>
-                <button type="button" class="btn btn-primary" @onclick="Save" disabled="@_saving">
-                    @if (_saving) {
-                        <i class="fa-solid fa-spinner fa-spin me-1"></i>
-                        <span>Saving...</span>
-                    } else {
-                        <i class="fa-solid fa-save me-1"></i>
-                        <span>Save</span>
-                    }
-                </button>
+                @if (string.IsNullOrEmpty(Item.NewApiKey)) {
+                    <button type="button" class="btn btn-secondary" @onclick="Cancel" disabled="@_saving">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" @onclick="Save" disabled="@_saving">
+                        @if (_saving) {
+                            <i class="fa-solid fa-spinner fa-spin me-1"></i>
+                            <span>Saving...</span>
+                        } else {
+                            <i class="fa-solid fa-save me-1"></i>
+                            <span>Save</span>
+                        }
+                    </button>
+                } else {
+                    <button type="button" class="btn btn-success" @onclick="CloseAfterKeyCopied">
+                        <i class="fa-solid fa-check me-1"></i>Done
+                    </button>
+                }
             </div>
         </div>
     </div>
@@ -109,8 +129,6 @@
     private static readonly Random _random = new();
 
     private bool IsNew => Item.SourceSystemId == default;
-    private bool _showApiKey = false;
-    private bool _regenerateKey = false;
     private bool _saving = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -141,17 +159,51 @@
         StateHasChanged();
     }
 
-    private void ToggleApiKeyVisibility() => _showApiKey = !_showApiKey;
-
-    private async Task CopyApiKey()
+    private async Task CopyNewApiKey()
     {
-        await Helpers.CopyToClipboard(Item.ApiKey);
-        _showApiKey = true;
+        if (!string.IsNullOrEmpty(Item.NewApiKey)) {
+            await Helpers.CopyToClipboard(Item.NewApiKey);
+            Model.AddMessage("API key copied to clipboard!", MessageType.Success);
+        }
     }
 
-    private void RegenerateApiKey()
+    private async Task CloseAfterKeyCopied()
     {
-        _regenerateKey = true;
+        // Clear the NewApiKey before closing so it doesn't show again
+        Item.NewApiKey = null;
+        await OnSave.InvokeAsync(Item);
+    }
+
+    /// <summary>
+    /// Immediately regenerate API key (for existing source systems)
+    /// </summary>
+    private async Task RegenerateApiKeyNow()
+    {
+        _saving = true;
+        StateHasChanged();
+
+        try {
+            Item.ApiKey = "REGENERATE";
+            
+            var result = await Helpers.GetOrPost<DataObjects.SourceSystem>(
+                DataObjects.Endpoints.FreeGLBA.SaveSourceSystem, Item);
+            
+            if (result != null && !string.IsNullOrEmpty(result.NewApiKey)) {
+                // Update Item with the result - NewApiKey contains the plaintext key
+                Item.SourceSystemId = result.SourceSystemId;
+                Item.ApiKey = result.ApiKey;
+                Item.NewApiKey = result.NewApiKey;
+                Model.ClearMessages();
+                Model.AddMessage("API key regenerated! Copy your new key above.", MessageType.Success);
+            } else {
+                Model.ErrorMessages(new List<string> { "Failed to regenerate API key. Please try again." });
+            }
+        } catch (Exception ex) {
+            Model.ErrorMessages(new List<string> { $"Error: {ex.Message}" });
+        } finally {
+            _saving = false;
+            StateHasChanged();
+        }
     }
 
     private async Task Save()
@@ -168,13 +220,32 @@
         StateHasChanged();
 
         try {
-            // Signal if we need to regenerate the API key
-            if (IsNew || _regenerateKey) {
-                Item.ApiKey = "REGENERATE"; // Special marker for the backend
+            // For new items, always generate an API key
+            if (IsNew) {
+                Item.ApiKey = "REGENERATE";
             }
-            await OnSave.InvokeAsync(Item);
-            Model.ClearMessages();
-            Model.Message_Saved();
+            
+            // Call the save endpoint
+            var result = await Helpers.GetOrPost<DataObjects.SourceSystem>(
+                DataObjects.Endpoints.FreeGLBA.SaveSourceSystem, Item);
+            
+            if (result != null) {
+                // Update Item with the result
+                Item.SourceSystemId = result.SourceSystemId;
+                Item.ApiKey = result.ApiKey;
+                Item.NewApiKey = result.NewApiKey;
+                
+                // Check if a new API key was generated (always for new items)
+                if (!string.IsNullOrEmpty(result.NewApiKey)) {
+                    Model.ClearMessages();
+                    Model.AddMessage("Source system saved! Copy your new API key above.", MessageType.Success);
+                } else {
+                    // No new key (editing without regenerate), just close
+                    await OnSave.InvokeAsync(result);
+                    Model.ClearMessages();
+                    Model.Message_Saved();
+                }
+            }
         } finally {
             _saving = false;
             StateHasChanged();

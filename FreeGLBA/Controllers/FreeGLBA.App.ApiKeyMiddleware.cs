@@ -22,8 +22,19 @@ public class ApiKeyMiddleware
     public async Task InvokeAsync(HttpContext context, IDataAccess da)
     {
         // Only apply to external API paths that need API key auth
+        // POST /api/glba/events - external event submission
+        // POST /api/glba/events/batch - external batch submission
+        // GET requests to /api/glba/* are internal and use user auth
         var path = context.Request.Path.Value ?? "";
-        if (!path.StartsWith("/api/glba/events", StringComparison.OrdinalIgnoreCase))
+        var method = context.Request.Method;
+
+        // Only intercept POST requests to the events endpoint
+        // GET requests (like /api/glba/events/recent) use [Authorize] user auth
+        var requiresApiKey = method.Equals("POST", StringComparison.OrdinalIgnoreCase) &&
+                             (path.Equals("/api/glba/events", StringComparison.OrdinalIgnoreCase) ||
+                              path.Equals("/api/glba/events/batch", StringComparison.OrdinalIgnoreCase));
+
+        if (!requiresApiKey)
         {
             await _next(context);
             return;
