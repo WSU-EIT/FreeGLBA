@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using FreeGLBA.Controllers;
 
 namespace FreeGLBA.Server.Controllers;
 
@@ -182,6 +183,76 @@ public partial class DataController
     public async Task<ActionResult<List<DataObjects.AccessorSummary>>> GetTopAccessors([FromQuery] int limit = 10)
     {
         return Ok(await da.GetTopAccessorsAsync(limit));
+    }
+
+    #endregion
+
+    // ============================================================================
+    // API REQUEST LOGGING ENDPOINTS
+    // ============================================================================
+
+    #region API Request Logging
+
+    /// <summary>Get dashboard statistics for API logs.</summary>
+    [HttpPost("api/Data/GetApiLogDashboardStats")]
+    [SkipApiLogging(Reason = "Prevents infinite loop")]
+    public async Task<ActionResult<DataObjects.ApiLogDashboardStats>> GetApiLogDashboardStats([FromBody] DataObjects.ApiLogDashboardRequest request)
+    {
+        var from = request.From ?? DateTime.UtcNow.AddHours(-24);
+        var to = request.To ?? DateTime.UtcNow;
+        return Ok(await da.GetApiLogDashboardStatsAsync(from, to));
+    }
+
+    /// <summary>Get paginated/filtered list of API request logs.</summary>
+    [HttpPost("api/Data/GetApiLogs")]
+    [SkipApiLogging(Reason = "Prevents infinite loop")]
+    public async Task<ActionResult<DataObjects.ApiLogFilterResult>> GetApiLogs([FromBody] DataObjects.ApiLogFilter filter)
+    {
+        return Ok(await da.GetApiLogsAsync(filter));
+    }
+
+    /// <summary>Get a single API request log by ID.</summary>
+    [HttpPost("api/Data/GetApiLog")]
+    [SkipApiLogging(Reason = "Prevents infinite loop")]
+    public async Task<ActionResult<DataObjects.ApiRequestLog?>> GetApiLog([FromBody] Guid id)
+    {
+        var item = await da.GetApiLogAsync(id);
+        if (item == null) return NotFound();
+        return Ok(item);
+    }
+
+    #endregion
+
+    #region Body Logging Configuration
+
+    /// <summary>Get all body logging configurations.</summary>
+    [HttpGet("api/Data/GetBodyLoggingConfigs")]
+    [SkipApiLogging(Reason = "Prevents infinite loop")]
+    public async Task<ActionResult<List<DataObjects.BodyLoggingConfig>>> GetBodyLoggingConfigs()
+    {
+        return Ok(await da.GetBodyLoggingConfigsAsync());
+    }
+
+    /// <summary>Enable body logging for a source system.</summary>
+    [HttpPost("api/Data/EnableBodyLogging")]
+    [SkipApiLogging(Reason = "Prevents infinite loop")]
+    public async Task<ActionResult<DataObjects.BodyLoggingConfig>> EnableBodyLogging([FromBody] DataObjects.EnableBodyLoggingRequest request)
+    {
+        var result = await da.EnableBodyLoggingAsync(
+            request.SourceSystemId,
+            request.EnabledByUserId,
+            request.EnabledByUserName,
+            request.DurationHours,
+            request.Reason);
+        return Ok(result);
+    }
+
+    /// <summary>Disable body logging for a source system.</summary>
+    [HttpPost("api/Data/DisableBodyLogging")]
+    [SkipApiLogging(Reason = "Prevents infinite loop")]
+    public async Task<ActionResult<bool>> DisableBodyLogging([FromBody] Guid configId)
+    {
+        return Ok(await da.DisableBodyLoggingAsync(configId));
     }
 
     #endregion

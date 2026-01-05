@@ -36,4 +36,15 @@ public partial interface IDataAccess
     Task<DataObjects.ComplianceReport?> SaveComplianceReportAsync(DataObjects.ComplianceReport dto);
     Task<bool> DeleteComplianceReportAsync(Guid id);
 
+    // API Request Logging methods
+    Task<Guid> CreateApiLogAsync(EFModels.EFModels.ApiRequestLogItem log);
+    Task<DataObjects.ApiLogFilterResult> GetApiLogsAsync(DataObjects.ApiLogFilter filter);
+    Task<DataObjects.ApiRequestLog?> GetApiLogAsync(Guid id);
+    Task<DataObjects.ApiLogDashboardStats> GetApiLogDashboardStatsAsync(DateTime from, DateTime to);
+
+    // Body Logging Configuration methods
+    Task<EFModels.EFModels.BodyLoggingConfigItem?> GetBodyLoggingConfigAsync(Guid sourceSystemId);
+    Task<List<DataObjects.BodyLoggingConfig>> GetBodyLoggingConfigsAsync();
+    Task<DataObjects.BodyLoggingConfig> EnableBodyLoggingAsync(Guid sourceSystemId, Guid enabledByUserId, string enabledByUserName, int durationHours, string reason);
+    Task<bool> DisableBodyLoggingAsync(Guid configId);
 }

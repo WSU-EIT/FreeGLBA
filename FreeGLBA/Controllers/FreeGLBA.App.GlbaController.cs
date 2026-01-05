@@ -11,6 +11,7 @@ namespace FreeGLBA.Controllers;
 
 [ApiController]
 [Route("api/glba")]
+[ApiRequestLogging]
 public class GlbaController : ControllerBase
 {
     private readonly IDataAccess _da;

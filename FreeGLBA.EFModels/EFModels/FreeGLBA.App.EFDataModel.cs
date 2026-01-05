@@ -14,4 +14,8 @@ public partial class EFDataModel : DbContext
     public virtual DbSet<AccessEventItem> AccessEvents { get; set; } = null!;
     public virtual DbSet<DataSubjectItem> DataSubjects { get; set; } = null!;
     public virtual DbSet<ComplianceReportItem> ComplianceReports { get; set; } = null!;
+
+    // API Request Logging
+    public virtual DbSet<ApiRequestLogItem> ApiRequestLogs { get; set; } = null!;
+    public virtual DbSet<BodyLoggingConfigItem> BodyLoggingConfigs { get; set; } = null!;
 }
