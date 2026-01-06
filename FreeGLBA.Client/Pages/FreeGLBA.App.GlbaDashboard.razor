@@ -259,7 +259,9 @@ await glbaClient.LogAccessAsync(new GlbaEventRequest {
                                     @foreach (var evt in _recentEvents) {
                                         <tr>
                                             <td>
-                                                <span title="@evt.AccessedAt.ToLocalTime().ToString("f")">@GetTimeAgo(evt.AccessedAt)</span>
+                                                <a href="@GetEventUrl(evt.AccessEventId)">
+                                                    <span title="@evt.AccessedAt.ToLocalTime().ToString("f")">@GetTimeAgo(evt.AccessedAt)</span>
+                                                </a>
                                             </td>
                                             <td>
                                                 <div>@evt.UserId</div>
@@ -270,8 +272,10 @@ await glbaClient.LogAccessAsync(new GlbaEventRequest {
                                             <td>
                                                 @if (evt.SubjectCount > 1) {
                                                     <span class="badge bg-warning text-dark">@evt.SubjectCount subjects</span>
+                                                } else if (evt.SubjectId == "SYSTEM") {
+                                                    <span class="badge bg-secondary">SYSTEM</span>
                                                 } else {
-                                                    <span>@evt.SubjectId</span>
+                                                    <a href="@GetSubjectUrl(evt.SubjectId)">@evt.SubjectId</a>
                                                 }
                                             </td>
                                             <td>@(string.IsNullOrEmpty(evt.DataCategory) ? "-" : evt.DataCategory)</td>
@@ -488,5 +492,17 @@ await glbaClient.LogAccessAsync(new GlbaEventRequest {
         if (diff.TotalHours < 24) return $"{(int)diff.TotalHours} hours ago";
         if (diff.TotalDays < 7) return $"{(int)diff.TotalDays} days ago";
         return dt.ToString("MMM d, yyyy");
+    }
+
+    private string GetEventUrl(Guid eventId)
+    {
+        return Helpers.BuildUrl($"AccessEvents/{eventId}");
+    }
+
+    private string GetSubjectUrl(string? subjectId)
+    {
+        if (string.IsNullOrEmpty(subjectId)) return "#";
+        var encoded = Uri.EscapeDataString(subjectId);
+        return Helpers.BuildUrl($"DataSubjects/{encoded}");
     }
 }

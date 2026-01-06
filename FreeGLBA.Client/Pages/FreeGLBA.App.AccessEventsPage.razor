@@ -149,6 +149,8 @@
                                             <td>
                                                 @if (item.SubjectCount > 1) {
                                                     <span class="badge bg-warning text-dark">@item.SubjectCount</span>
+                                                } else if (item.SubjectId == "SYSTEM") {
+                                                    <span class="badge bg-secondary">SYSTEM</span>
                                                 } else {
                                                     <a href="@GetSubjectUrl(item.SubjectId)" @onclick:stopPropagation>@item.SubjectId</a>
                                                 }
@@ -249,10 +251,14 @@
                                 <div class="col-6">
                                     <label class="form-label text-muted small mb-0">Subject ID</label>
                                     <div>
-                                        <a href="@GetSubjectUrl(_selectedEvent.SubjectId)">
-                                            <strong>@_selectedEvent.SubjectId</strong>
-                                            <i class="fa-solid fa-arrow-right ms-1"></i>
-                                        </a>
+                                        @if (_selectedEvent.SubjectId == "SYSTEM") {
+                                            <span class="badge bg-secondary">SYSTEM</span>
+                                        } else {
+                                            <a href="@GetSubjectUrl(_selectedEvent.SubjectId)">
+                                                <strong>@_selectedEvent.SubjectId</strong>
+                                                <i class="fa-solid fa-arrow-right ms-1"></i>
+                                            </a>
+                                        }
                                     </div>
                                 </div>
                                 <div class="col-6">
