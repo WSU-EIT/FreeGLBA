@@ -7,6 +7,17 @@
     <File Path="Remove Modules from FreeFreeGLBA.exe" />
     <File Path="Rename FreeFreeGLBA.exe" />
   </Folder>
+  <Folder Name="/FreeTools/">
+    <Project Path="FreeTools/Docs/Docs.csproj" />
+    <Project Path="FreeTools/FreeTools.AppHost/FreeTools.AppHost.csproj" />
+    <Project Path="FreeTools/FreeTools.BrowserSnapshot/FreeTools.BrowserSnapshot.csproj" />
+    <Project Path="FreeTools/FreeTools.Core/FreeTools.Core.csproj" />
+    <Project Path="FreeTools/FreeTools.EndpointMapper/FreeTools.EndpointMapper.csproj" />
+    <Project Path="FreeTools/FreeTools.EndpointPoker/FreeTools.EndpointPoker.csproj" />
+    <Project Path="FreeTools/FreeTools.ForkCRM/FreeTools.ForkCRM.csproj" />
+    <Project Path="FreeTools/FreeTools.WorkspaceInventory/FreeTools.WorkspaceInventory.csproj" />
+    <Project Path="FreeTools/FreeTools.WorkspaceReporter/FreeTools.WorkspaceReporter.csproj" />
+  </Folder>
   <Project Path="Docs/Docs.csproj" Id="626fae91-42c9-4926-9167-59b9a7ebd85e" />
   <Project Path="FreeGLBA.Client/FreeGLBA.Client.csproj" />
   <Project Path="FreeGLBA.DataAccess/FreeGLBA.DataAccess.csproj" Id="1151d3cb-ca9f-4ff7-b187-1fe77e474ad5" />

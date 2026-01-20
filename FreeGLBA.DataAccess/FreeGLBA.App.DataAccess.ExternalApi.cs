@@ -44,6 +44,21 @@ public partial class DataAccess
             ReceivedAt = DateTime.UtcNow
         };
 
+        // Validation - UserId and AccessType are required
+        if (string.IsNullOrWhiteSpace(request.UserId))
+        {
+            response.Status = "error";
+            response.Message = "Missing required field: UserId";
+            return response;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.AccessType))
+        {
+            response.Status = "error";
+            response.Message = "Missing required field: AccessType";
+            return response;
+        }
+
         // Validation - SubjectId is optional for general audit logging
         // If no SubjectId provided, use "SYSTEM" as a placeholder
         var hasSubject = !string.IsNullOrWhiteSpace(request.SubjectId);

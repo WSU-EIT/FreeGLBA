@@ -127,7 +127,9 @@
                             <th class="cursor-pointer" @onclick='() => SetSort("SourceSystemName")'>
                                 Source @GetSortIcon("SourceSystemName")
                             </th>
-                            <th>Method</th>
+                            <th class="cursor-pointer" @onclick='() => SetSort("HttpMethod")'>
+                                Method @GetSortIcon("HttpMethod")
+                            </th>
                             <th class="cursor-pointer" @onclick='() => SetSort("RequestPath")'>
                                 Path @GetSortIcon("RequestPath")
                             </th>

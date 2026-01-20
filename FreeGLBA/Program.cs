@@ -3,6 +3,7 @@ using FreeGLBA.Components;
 using FreeGLBA.Server.Hubs;
 using FreeGLBA.Middleware;
 using Radzen;
+using Scalar.AspNetCore;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Claims;
@@ -16,6 +17,46 @@ namespace FreeGLBA
             var builder = AppModifyBuilderStart(WebApplication.CreateBuilder(args));
 
             builder.Services.AddControllersWithViews();
+
+            // OpenAPI documentation (Scalar UI)
+            builder.Services.AddOpenApi("glba-api", options =>
+            {
+                options.AddDocumentTransformer((document, context, cancellationToken) =>
+                {
+                    document.Info = new()
+                    {
+                        Title = "FreeGLBA API",
+                        Version = "v1",
+                        Description = """
+                            ## GLBA Compliance Data Access Tracking API
+                            
+                            FreeGLBA provides endpoints for logging and querying access to protected financial information 
+                            as required by the Gramm-Leach-Bliley Act (GLBA).
+                            
+                            ### Authentication
+                            
+                            **External Endpoints** (POST /api/glba/events, /api/glba/events/batch):
+                            - Use API Key authentication via the `Authorization: Bearer {api-key}` header
+                            - API keys are generated in the Source Systems admin page
+                            
+                            **Internal Endpoints** (GET /api/glba/...):
+                            - Require user authentication (JWT bearer token)
+                            - Used by the dashboard for querying data
+                            
+                            ### Quick Start
+                            
+                            ```bash
+                            curl -X POST /api/glba/events \
+                              -H "Authorization: Bearer YOUR_API_KEY" \
+                              -H "Content-Type: application/json" \
+                              -d '{"userId": "jsmith", "subjectId": "STU-12345", "accessType": "View"}'
+                            ```
+                            """,
+                        Contact = new() { Name = "WSU Enrollment IT", Url = new Uri("https://em.wsu.edu/eit") }
+                    };
+                    return Task.CompletedTask;
+                });
+            });
 
             builder.Services.AddRadzenComponents();
             builder.Services.AddScoped<Radzen.DialogService>();
@@ -214,6 +255,17 @@ namespace FreeGLBA
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment()) {
                 app.UseWebAssemblyDebugging();
+                
+                // OpenAPI documentation (available at /scalar/glba-api)
+                app.MapOpenApi();
+                app.MapScalarApiReference(options =>
+                {
+                    options
+                        .WithTitle("FreeGLBA API Documentation")
+                        .WithTheme(ScalarTheme.BluePlanet)
+                        .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
+                        .WithPreferredScheme("Bearer");
+                });
             } else {
                 app.UseExceptionHandler("/Error");
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.

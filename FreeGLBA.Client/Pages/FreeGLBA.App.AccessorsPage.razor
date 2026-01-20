@@ -130,7 +130,9 @@
                                 <th class="sortable @SortClass("ExportCount")" @onclick="@(() => Sort("ExportCount"))">
                                     Exports <i class="fa-solid @SortIcon("ExportCount") ms-1"></i>
                                 </th>
-                                <th>Views</th>
+                                <th class="sortable @SortClass("ViewCount")" @onclick="@(() => Sort("ViewCount"))">
+                                    Views <i class="fa-solid @SortIcon("ViewCount") ms-1"></i>
+                                </th>
                                 <th class="sortable @SortClass("LastAccessAt")" @onclick="@(() => Sort("LastAccessAt"))">
                                     Last Access <i class="fa-solid @SortIcon("LastAccessAt") ms-1"></i>
                                 </th>

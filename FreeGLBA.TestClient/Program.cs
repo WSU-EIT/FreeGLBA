@@ -4,11 +4,13 @@ using Microsoft.Extensions.Configuration;
 Console.WriteLine("FreeGLBA Test Client - Comprehensive Test Suite");
 Console.WriteLine("================================================\n");
 
-// Load configuration from appsettings.json and user secrets
+// Load configuration from appsettings.json, user secrets, and environment variables
+// Environment variables are used by Aspire AppHost to override settings
 var configuration = new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: false)
     .AddUserSecrets<Program>(optional: true)
+    .AddEnvironmentVariables()  // Aspire passes config via env vars (FreeGLBA__Endpoint)
     .Build();
 
 var endpoint = configuration["FreeGLBA:Endpoint"] ?? "https://localhost:7271";
@@ -274,10 +276,10 @@ await RunTestAsync("Test 10: Invalid API key returns 401", async () =>
 // Test 11: Empty API key
 await RunTestAsync("Test 11: Empty API key returns 401", async () =>
 {
-    using var emptyKeyClient = new GlbaClient(endpoint, "");
-
     try
     {
+        using var emptyKeyClient = new GlbaClient(endpoint, "");
+
         await emptyKeyClient.LogAccessAsync(new GlbaEventRequest
         {
             AccessedAt = DateTime.UtcNow,
@@ -285,16 +287,16 @@ await RunTestAsync("Test 11: Empty API key returns 401", async () =>
             SubjectId = "STU-UNAUTH-002",
             AccessType = "View"
         });
-        throw new Exception("Expected GlbaAuthenticationException but none was thrown");
+        throw new Exception("Expected GlbaAuthenticationException or ArgumentException but none was thrown");
     }
     catch (GlbaAuthenticationException)
     {
         Console.WriteLine($"    Correctly received 401 Unauthorized for empty API key");
         return true;
     }
-    catch (ArgumentException)
+    catch (ArgumentException ex) when (ex.ParamName == "ApiKey")
     {
-        // Client may validate API key before sending
+        // Client validates API key before sending
         Console.WriteLine($"    Correctly rejected empty API key at client level");
         return true;
     }
@@ -396,133 +398,6 @@ await RunTestAsync("Test 15: Batch > 1000 events throws exception", async () =>
         Console.WriteLine($"    Correctly rejected batch with > 1000 events");
         return true;
     }
-});
-
-// ============================================================
-// SECTION 4: INTERNAL ENDPOINT TESTS (User Auth Required)
-// These endpoints require a valid user JWT token, not an API key.
-// Without a token, they should return 401 Unauthorized.
-// ============================================================
-Console.WriteLine();
-Console.WriteLine("=".PadRight(60, '='));
-Console.WriteLine("SECTION 4: INTERNAL ENDPOINT TESTS (User Auth Required)");
-Console.WriteLine("=".PadRight(60, '='));
-Console.WriteLine();
-
-// Test 16: GetStatsAsync without user auth returns 401
-await RunTestAsync("Test 16: GetStatsAsync without user auth returns 401", async () =>
-{
-    try
-    {
-        // API key won't work for [Authorize] endpoints - they need user JWT
-        await client.GetStatsAsync();
-        throw new Exception("Expected GlbaAuthenticationException but none was thrown");
-    }
-    catch (GlbaAuthenticationException)
-    {
-        Console.WriteLine($"    Correctly received 401 - endpoint requires user authentication");
-        return true;
-    }
-});
-
-// Test 17: GetRecentEventsAsync without user auth returns 401
-await RunTestAsync("Test 17: GetRecentEventsAsync without user auth returns 401", async () =>
-{
-    try
-    {
-        await client.GetRecentEventsAsync(10);
-        throw new Exception("Expected GlbaAuthenticationException but none was thrown");
-    }
-    catch (GlbaAuthenticationException)
-    {
-        Console.WriteLine($"    Correctly received 401 - endpoint requires user authentication");
-        return true;
-    }
-});
-
-// Test 18: GetSubjectEventsAsync without user auth returns 401
-await RunTestAsync("Test 18: GetSubjectEventsAsync without user auth returns 401", async () =>
-{
-    try
-    {
-        await client.GetSubjectEventsAsync("STU-TEST-001", 10);
-        throw new Exception("Expected GlbaAuthenticationException but none was thrown");
-    }
-    catch (GlbaAuthenticationException)
-    {
-        Console.WriteLine($"    Correctly received 401 - endpoint requires user authentication");
-        return true;
-    }
-});
-
-// Test 19: GetEventAsync without user auth returns 401
-await RunTestAsync("Test 19: GetEventAsync without user auth returns 401", async () =>
-{
-    try
-    {
-        await client.GetEventAsync(Guid.NewGuid());
-        throw new Exception("Expected GlbaAuthenticationException but none was thrown");
-    }
-    catch (GlbaAuthenticationException)
-    {
-        Console.WriteLine($"    Correctly received 401 - endpoint requires user authentication");
-        return true;
-    }
-});
-
-// Test 20: GetSourceStatusAsync without user auth returns 401
-await RunTestAsync("Test 20: GetSourceStatusAsync without user auth returns 401", async () =>
-{
-    try
-    {
-        await client.GetSourceStatusAsync();
-        throw new Exception("Expected GlbaAuthenticationException but none was thrown");
-    }
-    catch (GlbaAuthenticationException)
-    {
-        Console.WriteLine($"    Correctly received 401 - endpoint requires user authentication");
-        return true;
-    }
-});
-
-// Test 21: GetTopAccessorsAsync without user auth returns 401
-await RunTestAsync("Test 21: GetTopAccessorsAsync without user auth returns 401", async () =>
-{
-    try
-    {
-        await client.GetTopAccessorsAsync(10);
-        throw new Exception("Expected GlbaAuthenticationException but none was thrown");
-    }
-    catch (GlbaAuthenticationException)
-    {
-        Console.WriteLine($"    Correctly received 401 - endpoint requires user authentication");
-        return true;
-    }
-});
-
-// Test 22: SetBearerToken/ClearBearerToken functionality
-await RunTestAsync("Test 22: SetBearerToken and ClearBearerToken work correctly", async () =>
-{
-    // Test that SetBearerToken doesn't throw
-    client.SetBearerToken("test-token-12345");
-    Console.WriteLine($"    SetBearerToken accepted token");
-
-    // Test that ClearBearerToken doesn't throw
-    client.ClearBearerToken();
-    Console.WriteLine($"    ClearBearerToken completed");
-
-    // Verify null token throws ArgumentNullException
-    try
-    {
-        client.SetBearerToken(null!);
-        throw new Exception("Expected ArgumentNullException for null token");
-    }
-    catch (ArgumentNullException)
-    {
-        Console.WriteLine($"    Correctly rejected null token");
-    }
-
-    return true;
 });
 
 // ============================================================

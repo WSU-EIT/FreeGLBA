@@ -127,7 +127,9 @@
                                         <th class="sortable @SortClass("SubjectId")" @onclick="@(() => Sort("SubjectId"))">
                                             Subject <i class="fa-solid @SortIcon("SubjectId") ms-1"></i>
                                         </th>
-                                        <th>Type</th>
+                                        <th class="sortable @SortClass("AccessType")" @onclick="@(() => Sort("AccessType"))">
+                                            Type <i class="fa-solid @SortIcon("AccessType") ms-1"></i>
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -181,13 +183,28 @@
                                 <nav>
                                     <ul class="pagination pagination-sm mb-0">
                                         <li class="page-item @(_filter.Page <= 1 ? "disabled" : "")">
-                                            <button class="page-link" @onclick="@(() => GoToPage(_filter.Page - 1))" disabled="@(_filter.Page <= 1)">
+                                            <button class="page-link" @onclick="@(() => GoToPage(1))" disabled="@(_filter.Page <= 1)" title="First page">
+                                                <i class="fa-solid fa-angles-left"></i>
+                                            </button>
+                                        </li>
+                                        <li class="page-item @(_filter.Page <= 1 ? "disabled" : "")">
+                                            <button class="page-link" @onclick="@(() => GoToPage(_filter.Page - 1))" disabled="@(_filter.Page <= 1)" title="Previous page">
                                                 <i class="fa-solid fa-angle-left"></i>
                                             </button>
                                         </li>
+                                        @foreach (var p in GetPageNumbers()) {
+                                            <li class="page-item @(p == _filter.Page ? "active" : "")">
+                                                <button class="page-link" @onclick="@(() => GoToPage(p))">@p</button>
+                                            </li>
+                                        }
                                         <li class="page-item @(_filter.Page >= _result.TotalPages ? "disabled" : "")">
-                                            <button class="page-link" @onclick="@(() => GoToPage(_filter.Page + 1))" disabled="@(_filter.Page >= _result.TotalPages)">
+                                            <button class="page-link" @onclick="@(() => GoToPage(_filter.Page + 1))" disabled="@(_filter.Page >= _result.TotalPages)" title="Next page">
                                                 <i class="fa-solid fa-angle-right"></i>
+                                            </button>
+                                        </li>
+                                        <li class="page-item @(_filter.Page >= _result.TotalPages ? "disabled" : "")">
+                                            <button class="page-link" @onclick="@(() => GoToPage(_result.TotalPages))" disabled="@(_filter.Page >= _result.TotalPages)" title="Last page">
+                                                <i class="fa-solid fa-angles-right"></i>
                                             </button>
                                         </li>
                                     </ul>
@@ -267,9 +284,66 @@
                                 </div>
                             </div>
                             @if (_selectedEvent.SubjectCount > 1) {
-                                <div class="alert alert-warning small py-2">
-                                    <i class="fa-solid fa-users me-1"></i>
-                                    This event involved <strong>@_selectedEvent.SubjectCount subjects</strong>
+                                <div class="alert alert-warning py-2 mb-0">
+                                    <div class="d-flex justify-content-between align-items-center cursor-pointer" 
+                                         @onclick="ToggleSubjectsList">
+                                        <span>
+                                            <i class="fa-solid fa-users me-1"></i>
+                                            This event involved <strong>@_selectedEvent.SubjectCount subjects</strong>
+                                        </span>
+                                        <i class="fa-solid @(_subjectsExpanded ? "fa-chevron-up" : "fa-chevron-down")"></i>
+                                    </div>
+                                    @if (_subjectsExpanded && _parsedSubjectIds.Count > 0) {
+                                        <div class="mt-2 pt-2 border-top">
+                                            <div class="table-responsive" style="max-height: 300px;">
+                                                <table class="table table-sm table-hover mb-0">
+                                                    <thead class="table-light sticky-top">
+                                                        <tr>
+                                                            <th style="width: 50px;">#</th>
+                                                            <th>Subject ID</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @{ var startIndex = (_subjectsPage - 1) * _subjectsPageSize; }
+                                                        @foreach (var (subjectId, index) in GetPagedSubjects()) {
+                                                            <tr>
+                                                                <td class="text-muted">@(startIndex + index + 1)</td>
+                                                                <td>
+                                                                    <a href="@GetSubjectUrl(subjectId)">@subjectId</a>
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            @if (_subjectsTotalPages > 1) {
+                                                <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+                                                    <small class="text-muted">
+                                                        @(startIndex + 1)-@Math.Min(startIndex + _subjectsPageSize, _parsedSubjectIds.Count) of @_parsedSubjectIds.Count
+                                                    </small>
+                                                    <nav>
+                                                        <ul class="pagination pagination-sm mb-0">
+                                                            <li class="page-item @(_subjectsPage <= 1 ? "disabled" : "")">
+                                                                <button class="page-link py-0" @onclick="@(() => _subjectsPage--)" 
+                                                                        disabled="@(_subjectsPage <= 1)">
+                                                                    <i class="fa-solid fa-angle-left"></i>
+                                                                </button>
+                                                            </li>
+                                                            <li class="page-item disabled">
+                                                                <span class="page-link py-0">@_subjectsPage / @_subjectsTotalPages</span>
+                                                            </li>
+                                                            <li class="page-item @(_subjectsPage >= _subjectsTotalPages ? "disabled" : "")">
+                                                                <button class="page-link py-0" @onclick="@(() => _subjectsPage++)" 
+                                                                        disabled="@(_subjectsPage >= _subjectsTotalPages)">
+                                                                    <i class="fa-solid fa-angle-right"></i>
+                                                                </button>
+                                                            </li>
+                                                        </ul>
+                                                    </nav>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
                                 </div>
                             }
 
@@ -365,6 +439,13 @@
     
     // Detail panel
     private DataObjects.AccessEvent? _selectedEvent = null;
+    
+    // Expanded subjects list
+    private bool _subjectsExpanded = false;
+    private List<string> _parsedSubjectIds = new();
+    private int _subjectsPage = 1;
+    private int _subjectsPageSize = 25;
+    private int _subjectsTotalPages => (int)Math.Ceiling((double)_parsedSubjectIds.Count / _subjectsPageSize);
 
     public void Dispose() { Model.OnChange -= StateHasChanged; }
 
@@ -438,6 +519,11 @@
         Nav.NavigateTo(url, forceLoad: false, replace: false);
         
         _selectedEvent = item;
+        
+        // Reset subjects list state
+        _subjectsExpanded = false;
+        _parsedSubjectIds.Clear();
+        _subjectsPage = 1;
     }
 
     private void CloseDetail()
@@ -489,5 +575,58 @@
     private async Task GoToPage(int page) {
         _filter.Page = page;
         await LoadData();
+    }
+
+    private IEnumerable<int> GetPageNumbers()
+    {
+        // Show up to 5 page numbers centered around current page
+        int start = Math.Max(1, _filter.Page - 2);
+        int end = Math.Min(_result.TotalPages, start + 4);
+        start = Math.Max(1, end - 4); // Adjust start if near the end
+        
+        for (int i = start; i <= end; i++)
+            yield return i;
+    }
+
+    private void ToggleSubjectsList()
+    {
+        _subjectsExpanded = !_subjectsExpanded;
+        if (_subjectsExpanded && _parsedSubjectIds.Count == 0 && _selectedEvent != null)
+        {
+            ParseSubjectIds();
+        }
+    }
+
+    private void ParseSubjectIds()
+    {
+        _parsedSubjectIds.Clear();
+        _subjectsPage = 1;
+        
+        if (_selectedEvent == null || string.IsNullOrEmpty(_selectedEvent.SubjectIds))
+            return;
+            
+        try
+        {
+            // SubjectIds is stored as a JSON array: ["STU-001", "STU-002", ...]
+            _parsedSubjectIds = System.Text.Json.JsonSerializer.Deserialize<List<string>>(_selectedEvent.SubjectIds) ?? new();
+        }
+        catch
+        {
+            // Fallback: try splitting by comma if it's not valid JSON
+            _parsedSubjectIds = _selectedEvent.SubjectIds
+                .Trim('[', ']')
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim().Trim('"'))
+                .Where(s => !string.IsNullOrEmpty(s))
+                .ToList();
+        }
+    }
+
+    private IEnumerable<(string SubjectId, int Index)> GetPagedSubjects()
+    {
+        return _parsedSubjectIds
+            .Skip((_subjectsPage - 1) * _subjectsPageSize)
+            .Take(_subjectsPageSize)
+            .Select((id, idx) => (id, idx));
     }
 }

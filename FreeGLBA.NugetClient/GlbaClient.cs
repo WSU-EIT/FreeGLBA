@@ -323,8 +323,9 @@ public class GlbaClient : IGlbaClient, IDisposable
     /// <inheritdoc/>
     public async Task<GlbaStats> GetStatsAsync(CancellationToken cancellationToken = default)
     {
-        using var request = CreateAuthenticatedRequest(HttpMethod.Get, "api/glba/stats/summary");
-        var response = await SendWithRetryAsync(() => _httpClient.SendAsync(request, cancellationToken), cancellationToken);
+        var response = await SendWithRetryAsync(
+            () => SendAuthenticatedRequestAsync(HttpMethod.Get, "api/glba/stats/summary", cancellationToken), 
+            cancellationToken);
         return await HandleResponseAsync<GlbaStats>(response, cancellationToken);
     }
 
@@ -332,8 +333,9 @@ public class GlbaClient : IGlbaClient, IDisposable
     public async Task<List<AccessEvent>> GetRecentEventsAsync(int limit = 50, CancellationToken cancellationToken = default)
     {
         var url = $"api/glba/events/recent?limit={Math.Min(limit, 100)}";
-        using var request = CreateAuthenticatedRequest(HttpMethod.Get, url);
-        var response = await SendWithRetryAsync(() => _httpClient.SendAsync(request, cancellationToken), cancellationToken);
+        var response = await SendWithRetryAsync(
+            () => SendAuthenticatedRequestAsync(HttpMethod.Get, url, cancellationToken), 
+            cancellationToken);
         return await HandleResponseAsync<List<AccessEvent>>(response, cancellationToken);
     }
 
@@ -342,8 +344,9 @@ public class GlbaClient : IGlbaClient, IDisposable
     {
         var encodedSubjectId = Uri.EscapeDataString(subjectId);
         var url = $"api/glba/subjects/{encodedSubjectId}/events?limit={Math.Min(limit, 500)}";
-        using var request = CreateAuthenticatedRequest(HttpMethod.Get, url);
-        var response = await SendWithRetryAsync(() => _httpClient.SendAsync(request, cancellationToken), cancellationToken);
+        var response = await SendWithRetryAsync(
+            () => SendAuthenticatedRequestAsync(HttpMethod.Get, url, cancellationToken), 
+            cancellationToken);
         return await HandleResponseAsync<List<AccessEvent>>(response, cancellationToken);
     }
 
@@ -351,8 +354,9 @@ public class GlbaClient : IGlbaClient, IDisposable
     public async Task<AccessEvent?> GetEventAsync(Guid eventId, CancellationToken cancellationToken = default)
     {
         var url = $"api/glba/events/{eventId}";
-        using var request = CreateAuthenticatedRequest(HttpMethod.Get, url);
-        var response = await SendWithRetryAsync(() => _httpClient.SendAsync(request, cancellationToken), cancellationToken);
+        var response = await SendWithRetryAsync(
+            () => SendAuthenticatedRequestAsync(HttpMethod.Get, url, cancellationToken), 
+            cancellationToken);
 
         if (response.StatusCode == HttpStatusCode.NotFound)
             return null;
@@ -363,8 +367,9 @@ public class GlbaClient : IGlbaClient, IDisposable
     /// <inheritdoc/>
     public async Task<List<SourceSystemStatus>> GetSourceStatusAsync(CancellationToken cancellationToken = default)
     {
-        using var request = CreateAuthenticatedRequest(HttpMethod.Get, "api/glba/sources/status");
-        var response = await SendWithRetryAsync(() => _httpClient.SendAsync(request, cancellationToken), cancellationToken);
+        var response = await SendWithRetryAsync(
+            () => SendAuthenticatedRequestAsync(HttpMethod.Get, "api/glba/sources/status", cancellationToken), 
+            cancellationToken);
         return await HandleResponseAsync<List<SourceSystemStatus>>(response, cancellationToken);
     }
 
@@ -372,24 +377,17 @@ public class GlbaClient : IGlbaClient, IDisposable
     public async Task<List<AccessorSummary>> GetTopAccessorsAsync(int limit = 10, CancellationToken cancellationToken = default)
     {
         var url = $"api/glba/accessors/top?limit={Math.Min(limit, 50)}";
-        using var request = CreateAuthenticatedRequest(HttpMethod.Get, url);
-        var response = await SendWithRetryAsync(() => _httpClient.SendAsync(request, cancellationToken), cancellationToken);
+        var response = await SendWithRetryAsync(
+            () => SendAuthenticatedRequestAsync(HttpMethod.Get, url, cancellationToken), 
+            cancellationToken);
         return await HandleResponseAsync<List<AccessorSummary>>(response, cancellationToken);
     }
 
-    /// <inheritdoc/>
-    public void SetBearerToken(string bearerToken)
-    {
-        _bearerToken = bearerToken ?? throw new ArgumentNullException(nameof(bearerToken));
-    }
-
-    /// <inheritdoc/>
-    public void ClearBearerToken()
-    {
-        _bearerToken = null;
-    }
-
-    private HttpRequestMessage CreateAuthenticatedRequest(HttpMethod method, string url)
+    /// <summary>
+    /// Sends an authenticated request, creating a new HttpRequestMessage each time.
+    /// This allows for retry scenarios since HttpRequestMessage cannot be reused.
+    /// </summary>
+    private Task<HttpResponseMessage> SendAuthenticatedRequestAsync(HttpMethod method, string url, CancellationToken cancellationToken)
     {
         var request = new HttpRequestMessage(method, url);
 
@@ -404,7 +402,19 @@ public class GlbaClient : IGlbaClient, IDisposable
         }
 
         request.Headers.Add("Accept", "application/json");
-        return request;
+        return _httpClient.SendAsync(request, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public void SetBearerToken(string bearerToken)
+    {
+        _bearerToken = bearerToken ?? throw new ArgumentNullException(nameof(bearerToken));
+    }
+
+    /// <inheritdoc/>
+    public void ClearBearerToken()
+    {
+        _bearerToken = null;
     }
 
     private static HttpClient CreateHttpClient(GlbaClientOptions options)

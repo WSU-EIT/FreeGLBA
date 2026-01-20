@@ -60,14 +60,17 @@ await client.LogAccessAsync(new GlbaEventRequest
 
 | Project | Description |
 |---------|-------------|
-| `FreeGLBA` | Main server application (Blazor Server) |
-| `FreeGLBA.Client` | Blazor WebAssembly UI components |
-| `FreeGLBA.DataAccess` | Business logic and data access |
-| `FreeGLBA.DataObjects` | DTOs and shared models |
-| `FreeGLBA.EFModels` | Entity Framework database models |
-| `FreeGLBA.NugetClient` | Client library for API integration |
-| `FreeGLBA.Plugins` | Plugin system for extensibility |
-| `Docs` | Documentation |
+| [`FreeGLBA`](FreeGLBA/README.md) | Main server application (ASP.NET Core, Blazor Server) |
+| [`FreeGLBA.Client`](FreeGLBA.Client/README.md) | Blazor WebAssembly UI components |
+| [`FreeGLBA.DataAccess`](FreeGLBA.DataAccess/README.md) | Business logic and data access layer |
+| [`FreeGLBA.DataObjects`](FreeGLBA.DataObjects/README.md) | DTOs, configuration, and API endpoints |
+| [`FreeGLBA.EFModels`](FreeGLBA.EFModels/README.md) | Entity Framework Core database models |
+| [`FreeGLBA.NugetClient`](FreeGLBA.NugetClient/README.md) | Client library for API integration (NuGet package) |
+| [`FreeGLBA.NugetClientPublisher`](FreeGLBA.NugetClientPublisher/README.md) | NuGet package publishing tool |
+| [`FreeGLBA.Plugins`](FreeGLBA.Plugins/README.md) | Dynamic C# plugin system |
+| [`FreeGLBA.TestClient`](FreeGLBA.TestClient/README.md) | Test client (project reference) |
+| [`FreeGLBA.TestClientWithNugetPackage`](FreeGLBA.TestClientWithNugetPackage/README.md) | Test client (NuGet package) |
+| [`Docs`](Docs/README.md) | Documentation and guides |
 
 ## Documentation
 
@@ -75,6 +78,8 @@ await client.LogAccessAsync(new GlbaEventRequest
 - [Client Library](FreeGLBA.NugetClient/README.md)
 - [API Reference](FreeGLBA.DataObjects/README.md)
 - [Database Models](FreeGLBA.EFModels/README.md)
+- [Plugin System](FreeGLBA.Plugins/README.md)
+- [Data Access Layer](FreeGLBA.DataAccess/README.md)
 
 ## Contributing
 

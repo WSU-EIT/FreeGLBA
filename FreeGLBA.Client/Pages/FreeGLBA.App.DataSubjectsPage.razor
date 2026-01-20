@@ -146,13 +146,28 @@
                                 <nav>
                                     <ul class="pagination pagination-sm mb-0">
                                         <li class="page-item @(_filter.Page <= 1 ? "disabled" : "")">
-                                            <button class="page-link" @onclick="@(() => GoToPage(_filter.Page - 1))" disabled="@(_filter.Page <= 1)">
+                                            <button class="page-link" @onclick="@(() => GoToPage(1))" disabled="@(_filter.Page <= 1)" title="First page">
+                                                <i class="fa-solid fa-angles-left"></i>
+                                            </button>
+                                        </li>
+                                        <li class="page-item @(_filter.Page <= 1 ? "disabled" : "")">
+                                            <button class="page-link" @onclick="@(() => GoToPage(_filter.Page - 1))" disabled="@(_filter.Page <= 1)" title="Previous page">
                                                 <i class="fa-solid fa-angle-left"></i>
                                             </button>
                                         </li>
+                                        @foreach (var p in GetPageNumbers()) {
+                                            <li class="page-item @(p == _filter.Page ? "active" : "")">
+                                                <button class="page-link" @onclick="@(() => GoToPage(p))">@p</button>
+                                            </li>
+                                        }
                                         <li class="page-item @(_filter.Page >= _result.TotalPages ? "disabled" : "")">
-                                            <button class="page-link" @onclick="@(() => GoToPage(_filter.Page + 1))" disabled="@(_filter.Page >= _result.TotalPages)">
+                                            <button class="page-link" @onclick="@(() => GoToPage(_filter.Page + 1))" disabled="@(_filter.Page >= _result.TotalPages)" title="Next page">
                                                 <i class="fa-solid fa-angle-right"></i>
+                                            </button>
+                                        </li>
+                                        <li class="page-item @(_filter.Page >= _result.TotalPages ? "disabled" : "")">
+                                            <button class="page-link" @onclick="@(() => GoToPage(_result.TotalPages))" disabled="@(_filter.Page >= _result.TotalPages)" title="Last page">
+                                                <i class="fa-solid fa-angles-right"></i>
                                             </button>
                                         </li>
                                     </ul>
@@ -437,6 +452,17 @@
     private async Task GoToPage(int page) {
         _filter.Page = page;
         await LoadData();
+    }
+
+    private IEnumerable<int> GetPageNumbers()
+    {
+        // Show up to 5 page numbers centered around current page
+        int start = Math.Max(1, _filter.Page - 2);
+        int end = Math.Min(_result.TotalPages, start + 4);
+        start = Math.Max(1, end - 4); // Adjust start if near the end
+        
+        for (int i = start; i <= end; i++)
+            yield return i;
     }
 
     private string GetRelativeTime(DateTime dt) {
