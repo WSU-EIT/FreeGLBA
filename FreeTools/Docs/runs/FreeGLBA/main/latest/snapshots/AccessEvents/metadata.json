@@ -2,13 +2,13 @@
   "Route": "/AccessEvents",
   "Url": "https://localhost:7271/AccessEvents",
   "StatusCode": 200,
-  "FileSize": 19783,
+  "FileSize": 19790,
   "IsSuspiciouslySmall": false,
-  "RetryAttempted": true,
+  "RetryAttempted": false,
   "ConsoleErrors": [
     "Failed to load resource: the server responded with a status of 404 ()"
   ],
-  "CapturedAt": "2026-01-20T21:20:50.5458067Z",
+  "CapturedAt": "2026-01-20T23:40:28.786393Z",
   "IsSuccess": true,
   "IsHttpError": false,
   "IsError": false,
