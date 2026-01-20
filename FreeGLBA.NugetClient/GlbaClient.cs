@@ -14,6 +14,7 @@ public class GlbaClient : IGlbaClient, IDisposable
     private readonly GlbaClientOptions _options;
     private readonly bool _ownsHttpClient;
     private bool _disposed;
+    private string? _bearerToken;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -313,6 +314,97 @@ public class GlbaClient : IGlbaClient, IDisposable
         }
 
         return content.Length > 500 ? content[..500] : content;
+    }
+
+    // ============================================================
+    // INTERNAL ENDPOINTS (User Auth)
+    // ============================================================
+
+    /// <inheritdoc/>
+    public async Task<GlbaStats> GetStatsAsync(CancellationToken cancellationToken = default)
+    {
+        using var request = CreateAuthenticatedRequest(HttpMethod.Get, "api/glba/stats/summary");
+        var response = await SendWithRetryAsync(() => _httpClient.SendAsync(request, cancellationToken), cancellationToken);
+        return await HandleResponseAsync<GlbaStats>(response, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<List<AccessEvent>> GetRecentEventsAsync(int limit = 50, CancellationToken cancellationToken = default)
+    {
+        var url = $"api/glba/events/recent?limit={Math.Min(limit, 100)}";
+        using var request = CreateAuthenticatedRequest(HttpMethod.Get, url);
+        var response = await SendWithRetryAsync(() => _httpClient.SendAsync(request, cancellationToken), cancellationToken);
+        return await HandleResponseAsync<List<AccessEvent>>(response, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<List<AccessEvent>> GetSubjectEventsAsync(string subjectId, int limit = 100, CancellationToken cancellationToken = default)
+    {
+        var encodedSubjectId = Uri.EscapeDataString(subjectId);
+        var url = $"api/glba/subjects/{encodedSubjectId}/events?limit={Math.Min(limit, 500)}";
+        using var request = CreateAuthenticatedRequest(HttpMethod.Get, url);
+        var response = await SendWithRetryAsync(() => _httpClient.SendAsync(request, cancellationToken), cancellationToken);
+        return await HandleResponseAsync<List<AccessEvent>>(response, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<AccessEvent?> GetEventAsync(Guid eventId, CancellationToken cancellationToken = default)
+    {
+        var url = $"api/glba/events/{eventId}";
+        using var request = CreateAuthenticatedRequest(HttpMethod.Get, url);
+        var response = await SendWithRetryAsync(() => _httpClient.SendAsync(request, cancellationToken), cancellationToken);
+
+        if (response.StatusCode == HttpStatusCode.NotFound)
+            return null;
+
+        return await HandleResponseAsync<AccessEvent>(response, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<List<SourceSystemStatus>> GetSourceStatusAsync(CancellationToken cancellationToken = default)
+    {
+        using var request = CreateAuthenticatedRequest(HttpMethod.Get, "api/glba/sources/status");
+        var response = await SendWithRetryAsync(() => _httpClient.SendAsync(request, cancellationToken), cancellationToken);
+        return await HandleResponseAsync<List<SourceSystemStatus>>(response, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<List<AccessorSummary>> GetTopAccessorsAsync(int limit = 10, CancellationToken cancellationToken = default)
+    {
+        var url = $"api/glba/accessors/top?limit={Math.Min(limit, 50)}";
+        using var request = CreateAuthenticatedRequest(HttpMethod.Get, url);
+        var response = await SendWithRetryAsync(() => _httpClient.SendAsync(request, cancellationToken), cancellationToken);
+        return await HandleResponseAsync<List<AccessorSummary>>(response, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public void SetBearerToken(string bearerToken)
+    {
+        _bearerToken = bearerToken ?? throw new ArgumentNullException(nameof(bearerToken));
+    }
+
+    /// <inheritdoc/>
+    public void ClearBearerToken()
+    {
+        _bearerToken = null;
+    }
+
+    private HttpRequestMessage CreateAuthenticatedRequest(HttpMethod method, string url)
+    {
+        var request = new HttpRequestMessage(method, url);
+
+        // Use bearer token for internal endpoints if available, otherwise fall back to API key
+        if (!string.IsNullOrEmpty(_bearerToken))
+        {
+            request.Headers.Add("Authorization", $"Bearer {_bearerToken}");
+        }
+        else
+        {
+            request.Headers.Add("Authorization", $"Bearer {_options.ApiKey}");
+        }
+
+        request.Headers.Add("Accept", "application/json");
+        return request;
     }
 
     private static HttpClient CreateHttpClient(GlbaClientOptions options)

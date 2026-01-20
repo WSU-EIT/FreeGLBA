@@ -7,8 +7,16 @@ FreeGLBA provides a REST API for logging access events to protected financial da
 - [Quick Start](#quick-start)
 - [Authentication](#authentication)
 - [REST API Endpoints](#rest-api-endpoints)
-  - [POST /api/glba/events](#post-apiglbaevents)
-  - [POST /api/glba/events/batch](#post-apiglbaeventsbatch)
+  - [External Endpoints (API Key Auth)](#external-endpoints-api-key-auth)
+    - [POST /api/glba/events](#post-apiglbaevents)
+    - [POST /api/glba/events/batch](#post-apiglbaeventsbatch)
+  - [Internal Endpoints (User Auth)](#internal-endpoints-user-auth)
+    - [GET /api/glba/stats/summary](#get-apiglbastatssummary)
+    - [GET /api/glba/events/recent](#get-apiglbaeventsrecent)
+    - [GET /api/glba/subjects/{id}/events](#get-apiglbasubjectsidevents)
+    - [GET /api/glba/events/{id}](#get-apiglbaeventsid)
+    - [GET /api/glba/sources/status](#get-apiglbasourcesstatus)
+    - [GET /api/glba/accessors/top](#get-apiglbaaccessorstop)
 - [.NET Client Library](#net-client-library)
   - [Installation](#installation)
   - [Configuration](#configuration)
@@ -17,6 +25,8 @@ FreeGLBA provides a REST API for logging access events to protected financial da
 - [Data Models](#data-models)
 - [Error Handling](#error-handling)
 - [Best Practices](#best-practices)
+
+
 
 ---
 
@@ -290,6 +300,156 @@ Array of event objects (same schema as single event):
     }
   ]
 }
+```
+
+---
+
+### Internal Endpoints (User Auth)
+
+These endpoints require user authentication (JWT bearer token) rather than an API key. They are used by the FreeGLBA dashboard and can be accessed programmatically via the .NET client using `SetBearerToken()`.
+
+#### GET /api/glba/stats/summary
+
+Get dashboard summary statistics.
+
+**Endpoint:** `GET /api/glba/stats/summary`
+
+**Authentication:** User JWT (Bearer token)
+
+**Response:**
+```json
+{
+  "today": 125,
+  "thisWeek": 842,
+  "thisMonth": 3567,
+  "totalSubjects": 15234,
+  "subjectsToday": 89,
+  "subjectsThisWeek": 456,
+  "subjectsThisMonth": 1823,
+  "totalAccessors": 47,
+  "byCategory": {
+    "Financial Aid": 2345,
+    "Student Accounts": 1222
+  },
+  "byAccessType": {
+    "View": 2890,
+    "Export": 677
+  }
+}
+```
+
+---
+
+#### GET /api/glba/events/recent
+
+Get recent access events for the dashboard feed.
+
+**Endpoint:** `GET /api/glba/events/recent?limit=50`
+
+**Authentication:** User JWT (Bearer token)
+
+**Query Parameters:**
+| Parameter | Type | Default | Max | Description |
+|-----------|------|---------|-----|-------------|
+| `limit` | int | 50 | 100 | Number of events to return |
+
+**Response:** Array of `AccessEvent` objects.
+
+---
+
+#### GET /api/glba/subjects/{subjectId}/events
+
+Get access events for a specific data subject.
+
+**Endpoint:** `GET /api/glba/subjects/{subjectId}/events?limit=100`
+
+**Authentication:** User JWT (Bearer token)
+
+**Path Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `subjectId` | string | The external ID of the data subject |
+
+**Query Parameters:**
+| Parameter | Type | Default | Max | Description |
+|-----------|------|---------|-----|-------------|
+| `limit` | int | 100 | 500 | Number of events to return |
+
+**Response:** Array of `AccessEvent` objects for the specified subject.
+
+---
+
+#### GET /api/glba/events/{eventId}
+
+Get a single access event by ID.
+
+**Endpoint:** `GET /api/glba/events/{eventId}`
+
+**Authentication:** User JWT (Bearer token)
+
+**Path Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `eventId` | Guid | The unique identifier of the event |
+
+**Response:** Single `AccessEvent` object, or 404 if not found.
+
+---
+
+#### GET /api/glba/sources/status
+
+Get status information for all source systems.
+
+**Endpoint:** `GET /api/glba/sources/status`
+
+**Authentication:** User JWT (Bearer token)
+
+**Response:**
+```json
+[
+  {
+    "sourceSystemId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "name": "banner",
+    "displayName": "Banner",
+    "contactEmail": "admin@example.edu",
+    "isActive": true,
+    "lastEventReceivedAt": "2024-01-15T10:30:00Z",
+    "eventCount": 12456
+  }
+]
+```
+
+---
+
+#### GET /api/glba/accessors/top
+
+Get the top data accessors (users who have accessed the most data).
+
+**Endpoint:** `GET /api/glba/accessors/top?limit=10`
+
+**Authentication:** User JWT (Bearer token)
+
+**Query Parameters:**
+| Parameter | Type | Default | Max | Description |
+|-----------|------|---------|-----|-------------|
+| `limit` | int | 10 | 50 | Number of accessors to return |
+
+**Response:**
+```json
+[
+  {
+    "userId": "jsmith",
+    "userName": "John Smith",
+    "userEmail": "jsmith@example.edu",
+    "userDepartment": "Financial Aid",
+    "totalAccesses": 1523,
+    "uniqueSubjectsAccessed": 892,
+    "exportCount": 45,
+    "viewCount": 1478,
+    "firstAccessAt": "2024-01-01T08:00:00Z",
+    "lastAccessAt": "2024-01-15T10:30:00Z"
+  }
+]
 ```
 
 ---
@@ -584,6 +744,139 @@ foreach (var batch in events.Chunk(1000))
 {
     var response = await client.LogAccessBatchAsync(batch);
     Console.WriteLine($"Batch: {response.Accepted} accepted, {response.Rejected} rejected");
+}
+```
+
+### Internal Endpoint Methods (User Auth Required)
+
+These methods require user authentication via JWT bearer token. Use `SetBearerToken()` to configure.
+
+#### SetBearerToken / ClearBearerToken - Token Management
+
+```csharp
+/// <summary>
+/// Sets a bearer token for user authentication (required for internal endpoints).
+/// </summary>
+void SetBearerToken(string bearerToken);
+
+/// <summary>
+/// Clears the bearer token, reverting to API key authentication only.
+/// </summary>
+void ClearBearerToken();
+```
+
+**Example:**
+```csharp
+// After user authenticates, set the JWT token
+client.SetBearerToken(userJwtToken);
+
+// Now you can call internal endpoints
+var stats = await client.GetStatsAsync();
+
+// Clear when done or when user logs out
+client.ClearBearerToken();
+```
+
+#### GetStatsAsync - Dashboard Statistics
+
+```csharp
+/// <summary>
+/// Gets dashboard summary statistics.
+/// </summary>
+Task<GlbaStats> GetStatsAsync(CancellationToken cancellationToken = default);
+```
+
+**Example:**
+```csharp
+var stats = await client.GetStatsAsync();
+Console.WriteLine($"Today: {stats.Today} events, {stats.SubjectsToday} subjects");
+Console.WriteLine($"This Month: {stats.ThisMonth} events");
+```
+
+#### GetRecentEventsAsync - Recent Events Feed
+
+```csharp
+/// <summary>
+/// Gets recent access events for the dashboard feed.
+/// </summary>
+Task<List<AccessEvent>> GetRecentEventsAsync(int limit = 50, CancellationToken cancellationToken = default);
+```
+
+**Example:**
+```csharp
+var recentEvents = await client.GetRecentEventsAsync(25);
+foreach (var evt in recentEvents)
+{
+    Console.WriteLine($"{evt.AccessedAt}: {evt.UserId} accessed {evt.SubjectId}");
+}
+```
+
+#### GetSubjectEventsAsync - Subject Access History
+
+```csharp
+/// <summary>
+/// Gets access events for a specific data subject.
+/// </summary>
+Task<List<AccessEvent>> GetSubjectEventsAsync(string subjectId, int limit = 100, CancellationToken cancellationToken = default);
+```
+
+**Example:**
+```csharp
+var subjectHistory = await client.GetSubjectEventsAsync("STU-12345", 50);
+Console.WriteLine($"Found {subjectHistory.Count} access events for student");
+```
+
+#### GetEventAsync - Single Event Lookup
+
+```csharp
+/// <summary>
+/// Gets a single access event by ID.
+/// </summary>
+Task<AccessEvent?> GetEventAsync(Guid eventId, CancellationToken cancellationToken = default);
+```
+
+**Example:**
+```csharp
+var evt = await client.GetEventAsync(eventId);
+if (evt != null)
+{
+    Console.WriteLine($"Event: {evt.UserId} {evt.AccessType} {evt.SubjectId}");
+}
+```
+
+#### GetSourceStatusAsync - Source System Status
+
+```csharp
+/// <summary>
+/// Gets status information for all source systems.
+/// </summary>
+Task<List<SourceSystemStatus>> GetSourceStatusAsync(CancellationToken cancellationToken = default);
+```
+
+**Example:**
+```csharp
+var sources = await client.GetSourceStatusAsync();
+foreach (var source in sources)
+{
+    Console.WriteLine($"{source.DisplayName}: {source.EventCount} events, Last: {source.LastEventReceivedAt}");
+}
+```
+
+#### GetTopAccessorsAsync - Top Data Accessors
+
+```csharp
+/// <summary>
+/// Gets the top data accessors (users who have accessed the most data).
+/// </summary>
+Task<List<AccessorSummary>> GetTopAccessorsAsync(int limit = 10, CancellationToken cancellationToken = default);
+```
+
+**Example:**
+```csharp
+var topAccessors = await client.GetTopAccessorsAsync(10);
+foreach (var accessor in topAccessors)
+{
+    Console.WriteLine($"{accessor.UserName}: {accessor.TotalAccesses} accesses, {accessor.UniqueSubjectsAccessed} subjects");
 }
 ```
 

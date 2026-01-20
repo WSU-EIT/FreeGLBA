@@ -168,6 +168,69 @@ var result = await client.LogAccessBatchAsync(events);
 Console.WriteLine($"Accepted: {result.Accepted}, Rejected: {result.Rejected}");
 ```
 
+## Internal Endpoints (Dashboard/Query Methods)
+
+These methods require **user JWT authentication** (not API keys) and are used for querying data from the FreeGLBA dashboard.
+
+### Setting Up User Authentication
+
+```csharp
+// After user authenticates, set their JWT token
+client.SetBearerToken(userJwtToken);
+
+// Now you can call internal endpoints
+var stats = await client.GetStatsAsync();
+
+// Clear the token when done
+client.ClearBearerToken();
+```
+
+### Available Query Methods
+
+```csharp
+// Get dashboard statistics
+var stats = await client.GetStatsAsync();
+Console.WriteLine($"Today: {stats.Today} events, {stats.SubjectsToday} subjects");
+
+// Get recent access events
+var recentEvents = await client.GetRecentEventsAsync(limit: 50);
+foreach (var evt in recentEvents)
+{
+    Console.WriteLine($"{evt.AccessedAt}: {evt.UserId} {evt.AccessType} {evt.SubjectId}");
+}
+
+// Get access history for a specific subject
+var subjectHistory = await client.GetSubjectEventsAsync("STU-12345", limit: 100);
+
+// Get a single event by ID
+var evt = await client.GetEventAsync(eventId);
+
+// Get status of all source systems
+var sources = await client.GetSourceStatusAsync();
+foreach (var source in sources)
+{
+    Console.WriteLine($"{source.DisplayName}: {source.EventCount} events");
+}
+
+// Get top data accessors
+var topAccessors = await client.GetTopAccessorsAsync(limit: 10);
+foreach (var accessor in topAccessors)
+{
+    Console.WriteLine($"{accessor.UserName}: {accessor.TotalAccesses} accesses");
+}
+```
+
+### Response Models
+
+| Method | Returns |
+|--------|---------|
+| `GetStatsAsync()` | `GlbaStats` - Dashboard statistics |
+| `GetRecentEventsAsync()` | `List<AccessEvent>` - Recent events |
+| `GetSubjectEventsAsync()` | `List<AccessEvent>` - Subject's history |
+| `GetEventAsync()` | `AccessEvent?` - Single event or null |
+| `GetSourceStatusAsync()` | `List<SourceSystemStatus>` - Source systems |
+| `GetTopAccessorsAsync()` | `List<AccessorSummary>` - Top users |
+
 ## Configuration Options
 
 | Option | Type | Default | Description |
@@ -266,8 +329,8 @@ dotnet pack -c Release
 ```
 
 The NuGet package will be created at:
-- Debug: `bin\Debug\FreeGLBA.Client.1.0.0.nupkg`
-- Release: `bin\Release\FreeGLBA.Client.1.0.0.nupkg`
+- Debug: `bin\Debug\FreeGLBA.Client.1.1.0.nupkg`
+- Release: `bin\Release\FreeGLBA.Client.1.1.0.nupkg`
 
 A symbol package (`.snupkg`) is also generated for debugging support.
 
@@ -296,10 +359,10 @@ cd FreeGLBA.NugetClient
 dotnet build -c Release
 
 # Publish to NuGet.org (replace YOUR_API_KEY with actual key)
-dotnet nuget push bin\Release\FreeGLBA.Client.1.0.0.nupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
+dotnet nuget push bin\Release\FreeGLBA.Client.1.1.0.nupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
 
 # Also push the symbol package for debugging support
-dotnet nuget push bin\Release\FreeGLBA.Client.1.0.0.snupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
+dotnet nuget push bin\Release\FreeGLBA.Client.1.1.0.snupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
 ```
 
 ### Option 2: Using Environment Variable

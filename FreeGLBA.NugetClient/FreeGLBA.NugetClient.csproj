@@ -8,7 +8,7 @@
 
     <!-- NuGet Package Properties -->
     <PackageId>FreeGLBA.Client</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <Authors>WSU-EIT</Authors>
     <Company>Washington State University</Company>
     <Description>Client library for FreeGLBA - GLBA Compliance Data Access Tracking System. Provides a simple, strongly-typed client for logging GLBA access events from your applications to track who accessed protected financial information, when, and why.</Description>
@@ -22,6 +22,17 @@
     
     <!-- Package release notes -->
     <PackageReleaseNotes>
+v1.1.0 - Internal Endpoints &amp; Enhanced Testing
+- NEW: GetStatsAsync - Dashboard statistics
+- NEW: GetRecentEventsAsync - Recent access events
+- NEW: GetSubjectEventsAsync - Subject access history
+- NEW: GetEventAsync - Single event lookup
+- NEW: GetSourceStatusAsync - Source system status
+- NEW: GetTopAccessorsAsync - Top data accessors
+- NEW: SetBearerToken/ClearBearerToken - User JWT auth for internal endpoints
+- NEW: Convenience methods LogViewAsync, LogExportAsync, LogBulkViewAsync, LogBulkExportAsync
+- Added InternalApiModels: GlbaStats, AccessEvent, SourceSystemStatus, AccessorSummary
+
 v1.0.0 - Initial Release
 - Single event logging with LogAccessAsync
 - Batch logging with LogAccessBatchAsync (up to 1000 events)
