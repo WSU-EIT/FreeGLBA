@@ -112,6 +112,18 @@ public partial class DataObjects
     {
         public string? Search { get; set; }
         public string? Department { get; set; }
+        // Advanced filters
+        public int? MinTotalAccesses { get; set; }
+        public int? MaxTotalAccesses { get; set; }
+        public int? MinUniqueSubjects { get; set; }
+        public int? MaxUniqueSubjects { get; set; }
+        public int? MinExportCount { get; set; }
+        public int? MaxExportCount { get; set; }
+        public int? MinViewCount { get; set; }
+        public int? MaxViewCount { get; set; }
+        public DateTime? LastAccessAfter { get; set; }
+        public DateTime? LastAccessBefore { get; set; }
+        // Sort and pagination
         public string SortColumn { get; set; } = "TotalAccesses";
         public bool SortDescending { get; set; } = true;
         public int Page { get; set; } = 1;

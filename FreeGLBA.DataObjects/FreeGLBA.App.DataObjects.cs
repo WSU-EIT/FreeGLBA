@@ -26,7 +26,7 @@ public partial class DataObjects
         public long EventCount { get; set; } = 0;
     }
 
-    /// <summary>Filter criteria for SourceSystem queries.</summary>
+    /// <summary>Filter criteria for SourceSystemQueries.</summary>
     public class SourceSystemFilter
     {
         public string? Search { get; set; }
@@ -36,6 +36,11 @@ public partial class DataObjects
         public int PageSize { get; set; } = 25;
         public int Skip => (Page - 1) * PageSize;
         public bool? IsActiveFilter { get; set; }
+        // Advanced filters
+        public long? MinEventCount { get; set; }
+        public long? MaxEventCount { get; set; }
+        public DateTime? LastActivityAfter { get; set; }
+        public DateTime? LastActivityBefore { get; set; }
     }
 
     /// <summary>Paginated result for SourceSystem queries.</summary>
@@ -96,6 +101,14 @@ public partial class DataObjects
         public Guid SourceSystemIdFilter { get; set; }
         public (DateTime? Start, DateTime? End)? AccessedAtFilter { get; set; }
         public (DateTime? Start, DateTime? End)? ReceivedAtFilter { get; set; }
+        // Advanced filters (friendly property names)
+        public DateTime? AccessedAfter { get; set; }
+        public DateTime? AccessedBefore { get; set; }
+        public string? UserIdFilter { get; set; }
+        public string? SubjectIdFilter { get; set; }
+        public string? AccessTypeFilter { get; set; }
+        public string? DataCategoryFilter { get; set; }
+        public string? DepartmentFilter { get; set; }
     }
 
     /// <summary>Paginated result for AccessEvent queries.</summary>
@@ -134,6 +147,16 @@ public partial class DataObjects
         public (DateTime? Start, DateTime? End)? FirstAccessedAtFilter { get; set; }
         public (DateTime? Start, DateTime? End)? LastAccessedAtFilter { get; set; }
         public (decimal? Min, decimal? Max)? UniqueAccessorCountFilter { get; set; }
+        // Advanced filters (friendly property names)
+        public string? SubjectTypeFilter { get; set; }
+        public long? MinTotalAccesses { get; set; }
+        public long? MaxTotalAccesses { get; set; }
+        public int? MinUniqueAccessors { get; set; }
+        public int? MaxUniqueAccessors { get; set; }
+        public DateTime? LastAccessAfter { get; set; }
+        public DateTime? LastAccessBefore { get; set; }
+        public DateTime? FirstAccessAfter { get; set; }
+        public DateTime? FirstAccessBefore { get; set; }
     }
 
     /// <summary>Paginated result for DataSubject queries.</summary>
@@ -179,6 +202,16 @@ public partial class DataObjects
         public (DateTime? Start, DateTime? End)? PeriodEndFilter { get; set; }
         public (decimal? Min, decimal? Max)? UniqueUsersFilter { get; set; }
         public (decimal? Min, decimal? Max)? UniqueSubjectsFilter { get; set; }
+        // Advanced filters (friendly property names)
+        public string? ReportTypeFilter { get; set; }
+        public DateTime? GeneratedAfter { get; set; }
+        public DateTime? GeneratedBefore { get; set; }
+        public long? MinTotalEvents { get; set; }
+        public long? MaxTotalEvents { get; set; }
+        public int? MinUniqueUsers { get; set; }
+        public int? MaxUniqueUsers { get; set; }
+        public int? MinUniqueSubjects { get; set; }
+        public int? MaxUniqueSubjects { get; set; }
     }
 
     /// <summary>Paginated result for ComplianceReport queries.</summary>

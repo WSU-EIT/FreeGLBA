@@ -386,6 +386,28 @@ public partial class DataAccess
             query = query.Where(x => x.UserDepartment == filter.Department);
         }
 
+        // Apply advanced filters
+        if (filter.MinTotalAccesses.HasValue)
+            query = query.Where(x => x.TotalAccesses >= filter.MinTotalAccesses.Value);
+        if (filter.MaxTotalAccesses.HasValue)
+            query = query.Where(x => x.TotalAccesses <= filter.MaxTotalAccesses.Value);
+        if (filter.MinUniqueSubjects.HasValue)
+            query = query.Where(x => x.UniqueSubjectsAccessed >= filter.MinUniqueSubjects.Value);
+        if (filter.MaxUniqueSubjects.HasValue)
+            query = query.Where(x => x.UniqueSubjectsAccessed <= filter.MaxUniqueSubjects.Value);
+        if (filter.MinExportCount.HasValue)
+            query = query.Where(x => x.ExportCount >= filter.MinExportCount.Value);
+        if (filter.MaxExportCount.HasValue)
+            query = query.Where(x => x.ExportCount <= filter.MaxExportCount.Value);
+        if (filter.MinViewCount.HasValue)
+            query = query.Where(x => x.ViewCount >= filter.MinViewCount.Value);
+        if (filter.MaxViewCount.HasValue)
+            query = query.Where(x => x.ViewCount <= filter.MaxViewCount.Value);
+        if (filter.LastAccessAfter.HasValue)
+            query = query.Where(x => x.LastAccessAt >= filter.LastAccessAfter.Value);
+        if (filter.LastAccessBefore.HasValue)
+            query = query.Where(x => x.LastAccessAt <= filter.LastAccessBefore.Value);
+
         var total = await query.CountAsync();
 
         // Apply sorting
@@ -397,6 +419,7 @@ public partial class DataAccess
             "TotalAccesses" => filter.SortDescending ? query.OrderByDescending(x => x.TotalAccesses) : query.OrderBy(x => x.TotalAccesses),
             "UniqueSubjectsAccessed" => filter.SortDescending ? query.OrderByDescending(x => x.UniqueSubjectsAccessed) : query.OrderBy(x => x.UniqueSubjectsAccessed),
             "ExportCount" => filter.SortDescending ? query.OrderByDescending(x => x.ExportCount) : query.OrderBy(x => x.ExportCount),
+            "ViewCount" => filter.SortDescending ? query.OrderByDescending(x => x.ViewCount) : query.OrderBy(x => x.ViewCount),
             "LastAccessAt" => filter.SortDescending ? query.OrderByDescending(x => x.LastAccessAt) : query.OrderBy(x => x.LastAccessAt),
             _ => query.OrderByDescending(x => x.TotalAccesses) // Default: most active first
         };

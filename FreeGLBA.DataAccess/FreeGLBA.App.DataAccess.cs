@@ -26,6 +26,12 @@ public partial class DataAccess
             query = query.Where(x => x.Name.Contains(filter.Search) || x.DisplayName.Contains(filter.Search) || x.ContactEmail.Contains(filter.Search));
         }
 
+        // Apply advanced filters
+        if (filter.LastActivityAfter.HasValue)
+            query = query.Where(x => x.LastEventReceivedAt >= filter.LastActivityAfter.Value);
+        if (filter.LastActivityBefore.HasValue)
+            query = query.Where(x => x.LastEventReceivedAt <= filter.LastActivityBefore.Value);
+
         var total = await query.CountAsync();
 
         query = filter.SortColumn switch
@@ -48,19 +54,28 @@ public partial class DataAccess
             .Select(g => new { SourceSystemId = g.Key, Count = g.LongCount() })
             .ToDictionaryAsync(x => x.SourceSystemId, x => x.Count);
 
+        // Apply event count filters after getting counts (post-filter since it's computed)
+        var records = items.Select(x => new DataObjects.SourceSystem
+        {
+            SourceSystemId = x.SourceSystemId,
+            Name = x.Name,
+            DisplayName = x.DisplayName,
+            ApiKey = x.ApiKey,
+            ContactEmail = x.ContactEmail,
+            IsActive = x.IsActive,
+            LastEventReceivedAt = x.LastEventReceivedAt,
+            EventCount = eventCounts.GetValueOrDefault(x.SourceSystemId, 0),
+        }).ToList();
+
+        // Apply event count filters
+        if (filter.MinEventCount.HasValue)
+            records = records.Where(x => x.EventCount >= filter.MinEventCount.Value).ToList();
+        if (filter.MaxEventCount.HasValue)
+            records = records.Where(x => x.EventCount <= filter.MaxEventCount.Value).ToList();
+
         return new DataObjects.SourceSystemFilterResult
         {
-            Records = items.Select(x => new DataObjects.SourceSystem
-            {
-                SourceSystemId = x.SourceSystemId,
-                Name = x.Name,
-                DisplayName = x.DisplayName,
-                ApiKey = x.ApiKey,
-                ContactEmail = x.ContactEmail,
-                IsActive = x.IsActive,
-                LastEventReceivedAt = x.LastEventReceivedAt,
-                EventCount = eventCounts.GetValueOrDefault(x.SourceSystemId, 0),
-            }).ToList(),
+            Records = records,
             TotalRecords = total,
             Page = filter.Page,
             PageSize = filter.PageSize
@@ -187,6 +202,22 @@ public partial class DataAccess
                                      x.SubjectId.Contains(filter.Search) ||
                                      x.Purpose.Contains(filter.Search));
         }
+
+        // Apply advanced filters
+        if (filter.AccessedAfter.HasValue)
+            query = query.Where(x => x.AccessedAt >= filter.AccessedAfter.Value);
+        if (filter.AccessedBefore.HasValue)
+            query = query.Where(x => x.AccessedAt <= filter.AccessedBefore.Value);
+        if (!string.IsNullOrWhiteSpace(filter.UserIdFilter))
+            query = query.Where(x => x.UserId.Contains(filter.UserIdFilter));
+        if (!string.IsNullOrWhiteSpace(filter.SubjectIdFilter))
+            query = query.Where(x => x.SubjectId.Contains(filter.SubjectIdFilter));
+        if (!string.IsNullOrWhiteSpace(filter.AccessTypeFilter))
+            query = query.Where(x => x.AccessType == filter.AccessTypeFilter);
+        if (!string.IsNullOrWhiteSpace(filter.DataCategoryFilter))
+            query = query.Where(x => x.DataCategory == filter.DataCategoryFilter);
+        if (!string.IsNullOrWhiteSpace(filter.DepartmentFilter))
+            query = query.Where(x => x.UserDepartment == filter.DepartmentFilter);
 
         var total = await query.CountAsync();
 
@@ -411,6 +442,26 @@ public partial class DataAccess
             query = query.Where(x => x.ExternalId.Contains(filter.Search) || x.SubjectType.Contains(filter.Search));
         }
 
+        // Apply advanced filters
+        if (!string.IsNullOrWhiteSpace(filter.SubjectTypeFilter))
+            query = query.Where(x => x.SubjectType == filter.SubjectTypeFilter);
+        if (filter.MinTotalAccesses.HasValue)
+            query = query.Where(x => x.TotalAccessCount >= filter.MinTotalAccesses.Value);
+        if (filter.MaxTotalAccesses.HasValue)
+            query = query.Where(x => x.TotalAccessCount <= filter.MaxTotalAccesses.Value);
+        if (filter.MinUniqueAccessors.HasValue)
+            query = query.Where(x => x.UniqueAccessorCount >= filter.MinUniqueAccessors.Value);
+        if (filter.MaxUniqueAccessors.HasValue)
+            query = query.Where(x => x.UniqueAccessorCount <= filter.MaxUniqueAccessors.Value);
+        if (filter.LastAccessAfter.HasValue)
+            query = query.Where(x => x.LastAccessedAt >= filter.LastAccessAfter.Value);
+        if (filter.LastAccessBefore.HasValue)
+            query = query.Where(x => x.LastAccessedAt <= filter.LastAccessBefore.Value);
+        if (filter.FirstAccessAfter.HasValue)
+            query = query.Where(x => x.FirstAccessedAt >= filter.FirstAccessAfter.Value);
+        if (filter.FirstAccessBefore.HasValue)
+            query = query.Where(x => x.FirstAccessedAt <= filter.FirstAccessBefore.Value);
+
         var total = await query.CountAsync();
 
         query = filter.SortColumn switch
@@ -420,6 +471,7 @@ public partial class DataAccess
             "FirstAccessedAt" => filter.SortDescending ? query.OrderByDescending(x => x.FirstAccessedAt) : query.OrderBy(x => x.FirstAccessedAt),
             "LastAccessedAt" => filter.SortDescending ? query.OrderByDescending(x => x.LastAccessedAt) : query.OrderBy(x => x.LastAccessedAt),
             "TotalAccessCount" => filter.SortDescending ? query.OrderByDescending(x => x.TotalAccessCount) : query.OrderBy(x => x.TotalAccessCount),
+            "UniqueAccessorCount" => filter.SortDescending ? query.OrderByDescending(x => x.UniqueAccessorCount) : query.OrderBy(x => x.UniqueAccessorCount),
             _ => query.OrderByDescending(x => x.DataSubjectId)
         };
 
@@ -534,6 +586,26 @@ public partial class DataAccess
             query = query.Where(x => x.ReportType.Contains(filter.Search) || x.GeneratedBy.Contains(filter.Search) || x.ReportData.Contains(filter.Search));
         }
 
+        // Apply advanced filters
+        if (!string.IsNullOrWhiteSpace(filter.ReportTypeFilter))
+            query = query.Where(x => x.ReportType == filter.ReportTypeFilter);
+        if (filter.GeneratedAfter.HasValue)
+            query = query.Where(x => x.GeneratedAt >= filter.GeneratedAfter.Value);
+        if (filter.GeneratedBefore.HasValue)
+            query = query.Where(x => x.GeneratedAt <= filter.GeneratedBefore.Value);
+        if (filter.MinTotalEvents.HasValue)
+            query = query.Where(x => x.TotalEvents >= filter.MinTotalEvents.Value);
+        if (filter.MaxTotalEvents.HasValue)
+            query = query.Where(x => x.TotalEvents <= filter.MaxTotalEvents.Value);
+        if (filter.MinUniqueUsers.HasValue)
+            query = query.Where(x => x.UniqueUsers >= filter.MinUniqueUsers.Value);
+        if (filter.MaxUniqueUsers.HasValue)
+            query = query.Where(x => x.UniqueUsers <= filter.MaxUniqueUsers.Value);
+        if (filter.MinUniqueSubjects.HasValue)
+            query = query.Where(x => x.UniqueSubjects >= filter.MinUniqueSubjects.Value);
+        if (filter.MaxUniqueSubjects.HasValue)
+            query = query.Where(x => x.UniqueSubjects <= filter.MaxUniqueSubjects.Value);
+
         var total = await query.CountAsync();
 
         query = filter.SortColumn switch
@@ -543,6 +615,9 @@ public partial class DataAccess
             "GeneratedBy" => filter.SortDescending ? query.OrderByDescending(x => x.GeneratedBy) : query.OrderBy(x => x.GeneratedBy),
             "PeriodStart" => filter.SortDescending ? query.OrderByDescending(x => x.PeriodStart) : query.OrderBy(x => x.PeriodStart),
             "PeriodEnd" => filter.SortDescending ? query.OrderByDescending(x => x.PeriodEnd) : query.OrderBy(x => x.PeriodEnd),
+            "TotalEvents" => filter.SortDescending ? query.OrderByDescending(x => x.TotalEvents) : query.OrderBy(x => x.TotalEvents),
+            "UniqueUsers" => filter.SortDescending ? query.OrderByDescending(x => x.UniqueUsers) : query.OrderBy(x => x.UniqueUsers),
+            "UniqueSubjects" => filter.SortDescending ? query.OrderByDescending(x => x.UniqueSubjects) : query.OrderBy(x => x.UniqueSubjects),
             _ => query.OrderByDescending(x => x.ComplianceReportId)
         };
 

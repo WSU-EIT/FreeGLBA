@@ -62,27 +62,132 @@
             }
         </div>
 
+
+
+
         <div class="row">
             @* Subject List Panel *@
             <div class="@(_selectedSubject != null ? "col-lg-5" : "col-12")">
                 <div class="card shadow-sm mb-3">
                     <div class="card-body py-2">
                         <div class="row g-2 align-items-center">
-                            <div class="col-md-6">
+                            <div class="col-md-3">
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text"><i class="fa-solid fa-search"></i></span>
                                     <input type="text" class="form-control" placeholder="Search by ID or type..."
                                            @bind="_filter.Search" @bind:event="oninput" @bind:after="LoadData" />
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <select class="form-select form-select-sm" @bind="_filter.PageSize" @bind:after="@(() => { _filter.Page = 1; LoadData(); })">
                                     <option value="10">10 per page</option>
                                     <option value="25">25 per page</option>
                                     <option value="50">50 per page</option>
                                 </select>
                             </div>
+                            <div class="col-md-4">
+                                <select class="form-select form-select-sm" @bind="_sortOption" @bind:after="ApplySortOption">
+                                    <option value="TotalAccessCount-desc">Most Accessed</option>
+                                    <option value="TotalAccessCount-asc">Least Accessed</option>
+                                    <option value="LastAccessedAt-desc">Recent Activity</option>
+                                    <option value="LastAccessedAt-asc">Oldest Activity</option>
+                                    <option value="UniqueAccessorCount-desc">Most Accessors</option>
+                                    <option value="ExternalId-asc">ID (A-Z)</option>
+                                    <option value="ExternalId-desc">ID (Z-A)</option>
+                                    <option value="SubjectType-asc">Type (A-Z)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 text-end">
+                                <button class="btn btn-sm @(_showMoreFilters ? "btn-secondary" : "btn-outline-secondary")" @onclick="() => _showMoreFilters = !_showMoreFilters">
+                                    <i class="fa-solid fa-filter me-1"></i>More Filters
+                                    @if (HasAdvancedFilters()) { <span class="badge bg-primary ms-1">@GetAdvancedFilterCount()</span> }
+                                </button>
+                            </div>
                         </div>
+
+                        @* Advanced Filters - Expandable *@
+                        @if (_showMoreFilters) {
+                            <div class="mt-3 pt-3 border-top">
+                                <div class="row g-2">
+                                    <div class="col-md-3">
+                                        <label class="form-label small text-muted mb-1">Min Total Accesses</label>
+                                        <input type="number" class="form-control form-control-sm" placeholder="Min" 
+                                               @bind="_filter.MinTotalAccesses" @bind:after="@(() => { _filter.Page = 1; _ = LoadData(); })" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small text-muted mb-1">Max Total Accesses</label>
+                                        <input type="number" class="form-control form-control-sm" placeholder="Max" 
+                                               @bind="_filter.MaxTotalAccesses" @bind:after="@(() => { _filter.Page = 1; _ = LoadData(); })" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small text-muted mb-1">Min Unique Accessors</label>
+                                        <input type="number" class="form-control form-control-sm" placeholder="Min" 
+                                               @bind="_filter.MinUniqueAccessors" @bind:after="@(() => { _filter.Page = 1; _ = LoadData(); })" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small text-muted mb-1">Max Unique Accessors</label>
+                                        <input type="number" class="form-control form-control-sm" placeholder="Max" 
+                                               @bind="_filter.MaxUniqueAccessors" @bind:after="@(() => { _filter.Page = 1; _ = LoadData(); })" />
+                                    </div>
+                                </div>
+                                <div class="row g-2 mt-2">
+                                    <div class="col-md-3">
+                                        <label class="form-label small text-muted mb-1">Last Access After</label>
+                                        <input type="date" class="form-control form-control-sm" @bind="_filter.LastAccessAfter" @bind:after="@(() => { _filter.Page = 1; _ = LoadData(); })" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small text-muted mb-1">Last Access Before</label>
+                                        <input type="date" class="form-control form-control-sm" @bind="_filter.LastAccessBefore" @bind:after="@(() => { _filter.Page = 1; _ = LoadData(); })" />
+                                    </div>
+                                    <div class="col-md-6 d-flex align-items-end">
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="ClearAdvancedFilters">
+                                            <i class="fa-solid fa-times me-1"></i>Clear Advanced Filters
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        @* Active Filter Pills *@
+                        @if (HasActiveFilters()) {
+                            <div class="mt-2 d-flex flex-wrap gap-1 align-items-center">
+                                <small class="text-muted me-1">Filters:</small>
+                                @if (!string.IsNullOrWhiteSpace(_filter.Search)) {
+                                    <span class="badge bg-primary d-inline-flex align-items-center">
+                                        <i class="fa-solid fa-search me-1"></i>@_filter.Search
+                                        <button type="button" class="btn-close btn-close-white ms-1" style="font-size: 0.5rem;" 
+                                                @onclick="@(() => { _filter.Search = ""; _filter.Page = 1; _ = LoadData(); })"></button>
+                                    </span>
+                                }
+                                @if (_filter.MinTotalAccesses.HasValue || _filter.MaxTotalAccesses.HasValue) {
+                                    <span class="badge bg-warning text-dark d-inline-flex align-items-center">
+                                        Accesses: @(_filter.MinTotalAccesses?.ToString() ?? "0")–@(_filter.MaxTotalAccesses?.ToString() ?? "∞")
+                                        <button type="button" class="btn-close ms-1" style="font-size: 0.5rem;" 
+                                                @onclick="@(() => { _filter.MinTotalAccesses = null; _filter.MaxTotalAccesses = null; _filter.Page = 1; _ = LoadData(); })"></button>
+                                    </span>
+                                }
+                                @if (_filter.MinUniqueAccessors.HasValue || _filter.MaxUniqueAccessors.HasValue) {
+                                    <span class="badge bg-warning text-dark d-inline-flex align-items-center">
+                                        Accessors: @(_filter.MinUniqueAccessors?.ToString() ?? "0")–@(_filter.MaxUniqueAccessors?.ToString() ?? "∞")
+                                        <button type="button" class="btn-close ms-1" style="font-size: 0.5rem;" 
+                                                @onclick="@(() => { _filter.MinUniqueAccessors = null; _filter.MaxUniqueAccessors = null; _filter.Page = 1; _ = LoadData(); })"></button>
+                                    </span>
+                                }
+                                @if (_filter.LastAccessAfter.HasValue || _filter.LastAccessBefore.HasValue) {
+                                    <span class="badge bg-warning text-dark d-inline-flex align-items-center">
+                                        Last: @(_filter.LastAccessAfter?.ToString("M/d") ?? "…")–@(_filter.LastAccessBefore?.ToString("M/d") ?? "…")
+                                        <button type="button" class="btn-close ms-1" style="font-size: 0.5rem;" 
+                                                @onclick="@(() => { _filter.LastAccessAfter = null; _filter.LastAccessBefore = null; _filter.Page = 1; _ = LoadData(); })"></button>
+                                    </span>
+                                }
+                                <span class="badge bg-secondary d-inline-flex align-items-center">
+                                    <i class="fa-solid fa-sort me-1"></i>@GetSortDisplayName()
+                                </span>
+                                <button class="btn btn-link btn-sm text-danger p-0 ms-2" @onclick="ClearAllFilters">
+                                    <i class="fa-solid fa-times me-1"></i>Clear All
+                                </button>
+                            </div>
+                        }
                     </div>
                 </div>
 
@@ -309,76 +414,78 @@
 </style>
 
 @code {
-    [Parameter] public string? TenantCode { get; set; }
-    [Parameter] public string? SelectedSubjectId { get; set; }
+[Parameter] public string? TenantCode { get; set; }
+[Parameter] public string? SelectedSubjectId { get; set; }
     
-    private string _pageName = "datasubjects";
-    private bool _loading = true;
-    private bool _loadingEvents = false;
-    private DataObjects.DataSubjectFilter _filter = new() { SortColumn = "LastAccessedAt", SortDescending = true, PageSize = 25 };
-    private DataObjects.DataSubjectFilterResult _result = new();
-    private bool _helpExpanded = false;
+private string _pageName = "datasubjects";
+private bool _loading = true;
+private bool _loadingEvents = false;
+private bool _showMoreFilters = false;
+private DataObjects.DataSubjectFilter _filter = new() { SortColumn = "LastAccessedAt", SortDescending = true, PageSize = 25 };
+private DataObjects.DataSubjectFilterResult _result = new();
+private string _sortOption = "LastAccessedAt-desc";
+private bool _helpExpanded = false;
     
-    // Detail panel
-    private DataObjects.DataSubject? _selectedSubject = null;
-    private List<DataObjects.AccessEvent> _subjectEvents = new();
+// Detail panel
+private DataObjects.DataSubject? _selectedSubject = null;
+private List<DataObjects.AccessEvent> _subjectEvents = new();
 
-    public void Dispose() { Model.OnChange -= StateHasChanged; }
+public void Dispose() { Model.OnChange -= StateHasChanged; }
 
-    protected override void OnInitialized() {
-        Model.View = _pageName;
-        Model.OnChange += StateHasChanged;
-    }
+protected override void OnInitialized() {
+    Model.View = _pageName;
+    Model.OnChange += StateHasChanged;
+}
 
-    protected override async Task OnParametersSetAsync()
+protected override async Task OnParametersSetAsync()
+{
+    // Handle URL parameter for selected subject
+    if (!string.IsNullOrEmpty(SelectedSubjectId) && _selectedSubject?.ExternalId != SelectedSubjectId)
     {
-        // Handle URL parameter for selected subject
-        if (!string.IsNullOrEmpty(SelectedSubjectId) && _selectedSubject?.ExternalId != SelectedSubjectId)
-        {
-            await LoadSubjectByExternalId(SelectedSubjectId);
-        }
-        else if (string.IsNullOrEmpty(SelectedSubjectId) && _selectedSubject != null)
-        {
-            _selectedSubject = null;
-            _subjectEvents.Clear();
-        }
+        await LoadSubjectByExternalId(SelectedSubjectId);
     }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender) {
-        if (firstRender) await LoadData();
-    }
-
-    private async Task LoadSubjectByExternalId(string externalId)
+    else if (string.IsNullOrEmpty(SelectedSubjectId) && _selectedSubject != null)
     {
-        // Find subject in current results or search for it
-        var subject = _result.Records.FirstOrDefault(x => x.ExternalId == externalId);
-        if (subject == null)
-        {
-            // Search for it
-            var searchFilter = new DataObjects.DataSubjectFilter { Search = externalId, PageSize = 1 };
-            var searchResult = await Helpers.GetOrPost<DataObjects.DataSubjectFilterResult>(
-                DataObjects.Endpoints.FreeGLBA.GetDataSubjects, searchFilter);
-            subject = searchResult?.Records.FirstOrDefault(x => x.ExternalId == externalId);
-        }
+        _selectedSubject = null;
+        _subjectEvents.Clear();
+    }
+}
+
+protected override async Task OnAfterRenderAsync(bool firstRender) {
+    if (firstRender) await LoadData();
+}
+
+private async Task LoadSubjectByExternalId(string externalId)
+{
+    // Find subject in current results or search for it
+    var subject = _result.Records.FirstOrDefault(x => x.ExternalId == externalId);
+    if (subject == null)
+    {
+        // Search for it
+        var searchFilter = new DataObjects.DataSubjectFilter { Search = externalId, PageSize = 1 };
+        var searchResult = await Helpers.GetOrPost<DataObjects.DataSubjectFilterResult>(
+            DataObjects.Endpoints.FreeGLBA.GetDataSubjects, searchFilter);
+        subject = searchResult?.Records.FirstOrDefault(x => x.ExternalId == externalId);
+    }
         
-        if (subject != null)
-        {
-            _selectedSubject = subject;
-            await LoadSubjectEvents();
-        }
+    if (subject != null)
+    {
+        _selectedSubject = subject;
+        await LoadSubjectEvents();
     }
+}
 
-    private async Task LoadData() {
-        _loading = true;
-        StateHasChanged();
-        _result = await Helpers.GetOrPost<DataObjects.DataSubjectFilterResult>(
-            DataObjects.Endpoints.FreeGLBA.GetDataSubjects, _filter) ?? new();
-        _loading = false;
-        StateHasChanged();
+private async Task LoadData() {
+    _loading = true;
+    StateHasChanged();
+    _result = await Helpers.GetOrPost<DataObjects.DataSubjectFilterResult>(
+        DataObjects.Endpoints.FreeGLBA.GetDataSubjects, _filter) ?? new();
+    _loading = false;
+    StateHasChanged();
 
-        // If we have a URL parameter, select that subject
-        if (!string.IsNullOrEmpty(SelectedSubjectId) && _selectedSubject == null)
-        {
+    // If we have a URL parameter, select that subject
+    if (!string.IsNullOrEmpty(SelectedSubjectId) && _selectedSubject == null)
+    {
             await LoadSubjectByExternalId(SelectedSubjectId);
         }
     }
@@ -431,6 +538,62 @@
         return Helpers.BuildUrl($"AccessEvents/{eventId}");
     }
 
+    private bool HasActiveFilters() => !string.IsNullOrWhiteSpace(_filter.Search) || HasAdvancedFilters();
+
+    private bool HasAdvancedFilters() =>
+        _filter.MinTotalAccesses.HasValue || _filter.MaxTotalAccesses.HasValue ||
+        _filter.MinUniqueAccessors.HasValue || _filter.MaxUniqueAccessors.HasValue ||
+        _filter.LastAccessAfter.HasValue || _filter.LastAccessBefore.HasValue;
+
+    private int GetAdvancedFilterCount() {
+        int count = 0;
+        if (_filter.MinTotalAccesses.HasValue || _filter.MaxTotalAccesses.HasValue) count++;
+        if (_filter.MinUniqueAccessors.HasValue || _filter.MaxUniqueAccessors.HasValue) count++;
+        if (_filter.LastAccessAfter.HasValue || _filter.LastAccessBefore.HasValue) count++;
+        return count;
+    }
+
+    private void ClearAdvancedFilters() {
+        _filter.MinTotalAccesses = null;
+        _filter.MaxTotalAccesses = null;
+        _filter.MinUniqueAccessors = null;
+        _filter.MaxUniqueAccessors = null;
+        _filter.LastAccessAfter = null;
+        _filter.LastAccessBefore = null;
+        _filter.Page = 1;
+        _ = LoadData();
+    }
+
+    private void ClearAllFilters() {
+        _filter.Search = "";
+        _sortOption = "LastAccessedAt-desc";
+        _filter.SortColumn = "LastAccessedAt";
+        _filter.SortDescending = true;
+        ClearAdvancedFilters();
+    }
+
+    private void ApplySortOption() {
+        var parts = _sortOption.Split('-');
+        if (parts.Length == 2) {
+            _filter.SortColumn = parts[0];
+            _filter.SortDescending = parts[1] == "desc";
+            _filter.Page = 1;
+            _ = LoadData();
+        }
+    }
+
+    private string GetSortDisplayName() => _sortOption switch {
+        "TotalAccessCount-desc" => "Most Accessed",
+        "TotalAccessCount-asc" => "Least Accessed",
+        "LastAccessedAt-desc" => "Recent Activity",
+        "LastAccessedAt-asc" => "Oldest Activity",
+        "UniqueAccessorCount-desc" => "Most Accessors",
+        "ExternalId-asc" => "ID (A-Z)",
+        "ExternalId-desc" => "ID (Z-A)",
+        "SubjectType-asc" => "Type (A-Z)",
+        _ => "Custom"
+    };
+
     private void Sort(string column) {
         if (_filter.SortColumn == column) {
             _filter.SortDescending = !_filter.SortDescending;
@@ -439,6 +602,7 @@
             _filter.SortDescending = column == "TotalAccessCount" || column == "UniqueAccessorCount" || 
                                      column == "LastAccessedAt" || column == "FirstAccessedAt";
         }
+        _sortOption = $"{column}-{(_filter.SortDescending ? "desc" : "asc")}";
         _filter.Page = 1;
         _ = LoadData();
     }
